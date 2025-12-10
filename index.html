@@ -9,15 +9,13 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Custom CSS -->
     <style>
         :root {
-            --bg-base: #f0f0eb;
-            --chrome-light: #ffffff;
-            --chrome-dark: #d4d4d8;
+            --bg-base: #fdfdfc;
             --screen-bg: #09090b;
         }
 
@@ -27,7 +25,7 @@
             color: #27272a;
             overflow-x: hidden;
             background-image: 
-                radial-gradient(#e5e5e5 1px, transparent 1px);
+                radial-gradient(#e5e7eb 1px, transparent 1px);
             background-size: 24px 24px;
         }
         
@@ -35,18 +33,18 @@
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* Cassette Tape Style */
+        /* City Pop Cassette Style (Celluloid / Solid Color) */
         .cassette-card {
-            background-color: #f2f2f0;
-            border-radius: 6px;
+            background-color: #f4f4f5; /* Off-white plastic */
+            border-radius: 8px;
             position: relative;
             box-shadow: 
-                0 4px 6px -1px rgba(0, 0, 0, 0.1), 
-                0 2px 4px -1px rgba(0, 0, 0, 0.06),
-                inset 0 1px 0 rgba(255,255,255,0.8);
+                0 4px 6px -1px rgba(0, 0, 0, 0.05), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.03),
+                inset 0 0 0 1px rgba(255,255,255,0.8);
             transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             border: 1px solid #d4d4d8;
-            padding: 8px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
         }
@@ -54,99 +52,141 @@
         .cassette-card:hover {
             transform: translateY(-4px);
             box-shadow: 
-                0 10px 15px -3px rgba(0, 0, 0, 0.1), 
-                0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Screw heads */
-        .screw {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #d4d4d8;
-            position: absolute;
-            border: 1px solid #a1a1aa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+                0 15px 20px -5px rgba(0, 0, 0, 0.1), 
+                0 8px 8px -5px rgba(0, 0, 0, 0.04);
             z-index: 10;
         }
-        .screw::after {
-            content: '';
-            width: 60%;
-            height: 1px;
-            background: #71717a;
-            transform: rotate(45deg);
-        }
-        .screw::before {
-            content: '';
-            width: 60%;
-            height: 1px;
-            background: #71717a;
-            transform: rotate(-45deg);
+
+        /* Decoration dots (minimalist screws) */
+        .deco-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #e4e4e7;
             position: absolute;
+            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
         }
 
         /* Cassette Label Area */
         .cassette-label {
-            border-radius: 4px;
+            border-radius: 6px;
             padding: 12px;
             position: relative;
             overflow: hidden;
-            height: 140px;
+            height: 160px;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
+            justify-content: space-between; /* Space out content */
             color: white;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1); /* Subtle physical shadow */
+            /* No internal gradients for Celluloid style */
+        }
+        
+        /* Icon positioning */
+        .cassette-icon-float {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px;
+            border-radius: 6px;
+            backdrop-filter: blur(0px);
+            border: 2px solid rgba(255,255,255,0.4);
         }
 
-        /* Cassette Window */
+        /* Cassette Window (Moved UP) */
         .cassette-window {
-            background: rgba(255,255,255,0.9);
-            border-radius: 20px;
-            height: 40px;
-            width: 100%;
-            margin-top: auto;
-            margin-bottom: 4px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 12px;
+            height: 36px;
+            width: 65%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .cassette-spool {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #ffffff;
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 2px solid rgba(0,0,0,0.1);
+        }
+        
+        .cassette-spool-teeth {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            border-radius: 50%;
+            background: conic-gradient(
+                from 0deg,
+                transparent 0deg, transparent 15deg, #e4e4e7 15deg, #e4e4e7 30deg,
+                transparent 30deg, transparent 45deg, #e4e4e7 45deg, #e4e4e7 60deg,
+                transparent 60deg, transparent 75deg, #e4e4e7 75deg, #e4e4e7 90deg,
+                transparent 90deg, transparent 105deg, #e4e4e7 105deg, #e4e4e7 120deg,
+                transparent 120deg, transparent 135deg, #e4e4e7 135deg, #e4e4e7 150deg,
+                transparent 150deg, transparent 165deg, #e4e4e7 165deg, #e4e4e7 180deg,
+                transparent 180deg, transparent 195deg, #e4e4e7 195deg, #e4e4e7 210deg,
+                transparent 210deg, transparent 225deg, #e4e4e7 225deg, #e4e4e7 240deg,
+                transparent 240deg, transparent 255deg, #e4e4e7 255deg, #e4e4e7 270deg,
+                transparent 270deg, transparent 285deg, #e4e4e7 285deg, #e4e4e7 300deg,
+                transparent 300deg, transparent 315deg, #e4e4e7 315deg, #e4e4e7 330deg,
+                transparent 330deg, transparent 345deg, #e4e4e7 345deg, #e4e4e7 360deg
+            );
+            mask: radial-gradient(transparent 35%, black 36%);
+            -webkit-mask: radial-gradient(transparent 35%, black 36%);
+        }
+        
+        .cassette-card:hover .cassette-spool-teeth {
+            animation: spinSpool 3s linear infinite;
+        }
+        
+        @keyframes spinSpool {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
-        /* Cassette Bottom (Trapezoid feel) */
+        /* Cassette Bottom */
         .cassette-bottom {
-            margin-top: 8px;
-            height: 24px;
+            margin-top: auto; /* Push to bottom */
+            height: 16px;
             background: #e4e4e7;
-            border-radius: 2px 2px 4px 4px;
+            border-radius: 2px 2px 6px 6px;
             border: 1px solid #d4d4d8;
             position: relative;
             margin-left: 12px;
             margin-right: 12px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05);
         }
+        /* Trapezoid shape effect */
         .cassette-bottom::before {
             content: '';
             position: absolute;
-            left: 10px;
-            top: 50%;
-            transform: translateY(-50%);
+            top: -4px;
+            left: -6px;
             width: 8px;
-            height: 8px;
-            background: #27272a;
-            border-radius: 50%;
+            height: 20px;
+            background: #f4f4f5;
+            transform: rotate(20deg);
         }
         .cassette-bottom::after {
             content: '';
             position: absolute;
-            right: 10px;
-            top: 50%;
-            transform: translateY(-50%);
+            top: -4px;
+            right: -6px;
             width: 8px;
-            height: 8px;
-            background: #27272a;
-            border-radius: 50%;
+            height: 20px;
+            background: #f4f4f5;
+            transform: rotate(-20deg);
         }
 
         /* Screen Style (VFD/CRT) */
@@ -211,6 +251,35 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
+        /* Hit animation */
+        .hit-effect {
+            animation: hit 0.1s ease-in-out;
+        }
+        @keyframes hit {
+            0% { transform: scale(1); filter: brightness(1); }
+            50% { transform: scale(0.95); filter: brightness(1.2); }
+            100% { transform: scale(1); filter: brightness(1); }
+        }
+
+        /* Hard Shake for Counter */
+        .shake-hard {
+            animation: shakeHard 0.15s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shakeHard {
+            10%, 90% { transform: translate3d(-2px, 2px, 0); }
+            20%, 80% { transform: translate3d(4px, -4px, 0); }
+            30%, 50%, 70% { transform: translate3d(-8px, 6px, 0); }
+            40%, 60% { transform: translate3d(8px, -6px, 0); }
+        }
+
+        .text-flash {
+            animation: textFlash 0.1s ease-out;
+        }
+        @keyframes textFlash {
+            0% { color: #fff; text-shadow: 0 0 20px #fff; }
+            100% { }
+        }
 
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
@@ -228,6 +297,68 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #52525b;
         }
+        
+        .shortcut-key {
+            font-family: 'JetBrains Mono', monospace;
+            background: #f4f4f5;
+            border: 1px solid #d4d4d8;
+            border-bottom-width: 3px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #52525b;
+            display: inline-block;
+            margin-left: 4px;
+            font-weight: 800;
+        }
+
+        /* 3D Dice CSS */
+        .dice-scene {
+            perspective: 600px;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dice-cube {
+            width: 60px;
+            height: 60px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: translateZ(-30px);
+            transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .dice-face {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: rgba(99, 102, 241, 0.9);
+            border: 2px solid #a5b4fc;
+            color: white;
+            font-size: 24px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .dice-face-front  { transform: rotateY(  0deg) translateZ(30px); }
+        .dice-face-right  { transform: rotateY( 90deg) translateZ(30px); }
+        .dice-face-back   { transform: rotateY(180deg) translateZ(30px); }
+        .dice-face-left   { transform: rotateY(-90deg) translateZ(30px); }
+        .dice-face-top    { transform: rotateX( 90deg) translateZ(30px); }
+        .dice-face-bottom { transform: rotateX(-90deg) translateZ(30px); }
+
+        .dice-rolling {
+            animation: spinDice 0.3s linear infinite;
+        }
+        @keyframes spinDice {
+            0% { transform: translateZ(-30px) rotateX(0) rotateY(0) rotateZ(0); }
+            100% { transform: translateZ(-30px) rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+
     </style>
 </head>
 <body class="min-h-screen flex flex-col selection:bg-orange-500 selection:text-white">
@@ -235,25 +366,43 @@
     <!-- App Root -->
     <div id="app" class="flex flex-col min-h-screen z-10 relative">
         <!-- Content injected by JS -->
+        <div class="flex items-center justify-center h-screen text-zinc-400 font-bold tracking-widest animate-pulse">
+            加载中...
+        </div>
     </div>
 
     <!-- MAIN SCRIPT -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            if (window.App && window.App.init) {
-                window.App.init();
-            } else {
-                console.error("App failed to initialize.");
-                document.body.innerHTML = "<div class='p-10 text-center'>系统启动失败，请刷新页面。</div>";
-            }
+            window.App.init();
         });
 
         window.App = {
+            config: {
+                tools: []
+            },
             pages: {},
-            init: function() {
-                console.log("Future Toolkit Initializing...");
+            activePage: null,
+            init: async function() {
+                try {
+                    const resp = await fetch('metadata.json');
+                    const meta = await resp.json();
+                    this.config = meta;
+                    console.log("Config loaded:", meta);
+                } catch(e) {
+                    console.error("Failed to load metadata.json", e);
+                    // Fallback or alert
+                }
+
                 this.Router.init();
                 this.Router.handleRoute();
+                
+                // Global Key Handler
+                document.addEventListener('keydown', (e) => {
+                    if (this.activePage && this.activePage.handleKey) {
+                        this.activePage.handleKey(e);
+                    }
+                });
             }
         };
 
@@ -263,6 +412,7 @@
                 '': 'dashboard',
                 'counter': 'counter',
                 'anime-namer': 'animeNamer',
+                'dice': 'diceRoller',
                 'text-map': 'textMapEditor'
             },
 
@@ -283,6 +433,7 @@
                 const mainContent = document.getElementById('main-content');
                 if (pageModule && mainContent) {
                     try {
+                        window.App.activePage = pageModule;
                         mainContent.innerHTML = pageModule.render();
                         if (pageModule.mount) pageModule.mount(mainContent);
                     } catch (e) {
@@ -304,6 +455,7 @@
         window.App.Layout = {
             render: function(currentPath) {
                 const isHome = currentPath === '' || currentPath === '/';
+                const title = window.App.config.name || "未来工具箱";
                 
                 const backButton = !isHome ? `
                     <button onclick="window.App.Router.navigate('')"
@@ -320,7 +472,7 @@
 
                 return `
                 <header class="w-full pt-6 px-4 pb-2 relative z-20">
-                    <div class="max-w-6xl mx-auto">
+                    <div class="max-w-[90rem] mx-auto">
                         <div class="bg-gradient-to-r from-white to-zinc-50 rounded-[2.5rem] px-8 py-5 flex items-center justify-between shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-white ring-1 ring-zinc-100 relative overflow-hidden">
                             <!-- Streamline Stripe -->
                             <div class="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-16 bg-orange-500 rounded-r-full"></div>
@@ -332,7 +484,7 @@
                                 </div>
                                 <div class="flex flex-col">
                                     <h1 class="text-2xl font-black text-zinc-800 tracking-wider flex items-center gap-2">
-                                        未来工具箱
+                                        ${title}
                                     </h1>
                                     <div class="flex items-center gap-1 mt-1">
                                         <div class="h-1 w-8 bg-zinc-300 rounded-full"></div>
@@ -347,7 +499,7 @@
                     </div>
                 </header>
 
-                <main id="main-content" class="flex-1 w-full max-w-6xl mx-auto p-4 md:p-6 flex flex-col relative z-10">
+                <main id="main-content" class="flex-1 w-full max-w-[90rem] mx-auto p-4 md:p-6 flex flex-col relative z-10">
                     <!-- Page Content -->
                 </main>
 
@@ -367,19 +519,11 @@
             }
         };
 
-        // --- DASHBOARD (Cassette Style) ---
+        // --- DASHBOARD (City Pop Cassette Style) ---
         window.App.pages.dashboard = {
+            handleKey: function(e) {},
             render: function() {
-                const tools = [
-                    // Internal
-                    { id: 'counter', name: '手动计数器', desc: '精密计数模块', path: 'counter', icon: 'mouse-pointer-2', type: 'internal', labelColor: 'bg-[#ef4444]', iconColor: 'text-[#ef4444]' },
-                    { id: 'anime-namer', name: '二次元起名器', desc: '随机命名引擎', path: 'anime-namer', icon: 'sparkles', type: 'internal', labelColor: 'bg-[#f97316]', iconColor: 'text-[#f97316]' },
-                    { id: 'text-map', name: '文字地图编辑器', desc: '字符绘图终端', path: 'text-map', icon: 'map', type: 'internal', labelColor: 'bg-[#14b8a6]', iconColor: 'text-[#14b8a6]' },
-                    // External
-                    { id: 'diff-checker', name: '文本差异对比', desc: 'Diff Checker', path: 'https://www.diffchecker.com/zh-Hans/', icon: 'file-diff', type: 'external', labelColor: 'bg-[#3b82f6]', iconColor: 'text-[#3b82f6]' },
-                    { id: 'sauce-nao', name: '以图搜图', desc: 'SauceNAO', path: 'https://saucenao.com/', icon: 'image', type: 'external', labelColor: 'bg-[#6366f1]', iconColor: 'text-[#6366f1]' },
-                    { id: 'regex-online', name: '正则表达式', desc: 'Regex Online', path: 'https://www.jyshare.com/front-end/854/', icon: 'code', type: 'external', labelColor: 'bg-[#8b5cf6]', iconColor: 'text-[#8b5cf6]' }
-                ];
+                const tools = window.App.config.tools || [];
 
                 const renderCard = (tool) => {
                     const isExt = tool.type === 'external';
@@ -389,24 +533,39 @@
                     
                     return `
                     <div onclick="${onclick}" class="cassette-card cursor-pointer group">
-                        <!-- Screws -->
-                        <div class="screw top-1.5 left-1.5"></div>
-                        <div class="screw top-1.5 right-1.5"></div>
-                        <div class="screw bottom-1.5 left-1.5"></div>
-                        <div class="screw bottom-1.5 right-1.5"></div>
+                        <!-- Deco Dots -->
+                        <div class="deco-dot top-1.5 left-1.5"></div>
+                        <div class="deco-dot top-1.5 right-1.5"></div>
+                        <div class="deco-dot bottom-1.5 left-1.5"></div>
+                        <div class="deco-dot bottom-1.5 right-1.5"></div>
                         
                         <!-- Main Label -->
-                        <div class="cassette-label ${tool.labelColor}">
-                            <div class="flex justify-between items-start">
-                                <h3 class="font-black text-lg leading-tight tracking-tight text-white">${tool.name}</h3>
-                                ${isExt ? '<i data-lucide="external-link" class="w-4 h-4 text-white/70"></i>' : ''}
+                        <div class="cassette-label ${tool.labelClass}">
+                            <div class="cassette-icon-float">
+                                <i data-lucide="${tool.icon}" class="w-5 h-5 text-white drop-shadow-sm"></i>
                             </div>
-                            <div class="text-[10px] font-bold text-white/80 mb-2">${tool.desc}</div>
                             
-                            <!-- Window / Reels -->
-                            <div class="cassette-window">
-                                <i data-lucide="${tool.icon}" class="w-5 h-5 ${tool.iconColor}"></i>
+                            <!-- Title (Top) -->
+                            <div class="flex flex-col mt-1">
+                                <h3 class="font-black text-xl leading-tight tracking-tight text-white drop-shadow-sm">${tool.name}</h3>
                             </div>
+                            
+                            <!-- Window / Reels (CENTERED) -->
+                            <div class="cassette-window">
+                                <div class="cassette-spool">
+                                    <div class="cassette-spool-teeth"></div>
+                                </div>
+                                <div class="h-4 flex-1 mx-2 bg-zinc-800 rounded-sm border border-white/20 relative overflow-hidden shadow-inner">
+                                     <div class="absolute inset-0 bg-black/60"></div>
+                                     <div class="absolute top-1/2 left-0 w-full h-[2px] bg-white/20"></div>
+                                </div>
+                                <div class="cassette-spool">
+                                    <div class="cassette-spool-teeth"></div>
+                                </div>
+                            </div>
+
+                            <!-- Desc (Bottom) -->
+                            <div class="text-xs font-bold text-white/90 drop-shadow-sm self-end mb-1">${tool.desc}</div>
                         </div>
 
                         <!-- Bottom Tape Area -->
@@ -419,19 +578,19 @@
                 <div class="flex flex-col gap-10 fade-in pb-12">
                     <section>
                         <div class="flex items-center gap-3 mb-6">
-                            <h2 class="text-lg font-black text-zinc-500 tracking-widest">核心模组</h2>
+                            <h2 class="text-lg font-black text-zinc-500 tracking-widest">核心工具</h2>
                             <div class="h-[1px] flex-1 bg-zinc-300"></div>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             ${tools.filter(t => t.type === 'internal').map(renderCard).join('')}
                         </div>
                     </section>
                     <section>
                         <div class="flex items-center gap-3 mb-6">
-                            <h2 class="text-lg font-black text-zinc-500 tracking-widest">外部链接</h2>
+                            <h2 class="text-lg font-black text-zinc-500 tracking-widest">外部工具</h2>
                             <div class="h-[1px] flex-1 bg-zinc-300"></div>
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             ${tools.filter(t => t.type === 'external').map(renderCard).join('')}
                         </div>
                     </section>
@@ -443,11 +602,45 @@
         // --- COUNTER ---
         window.App.pages.counter = {
             count: 0,
+            handleKey: function(e) {
+                if (e.code === 'Space' || e.code === 'Enter') {
+                    e.preventDefault();
+                    this.increment();
+                }
+            },
+            increment: function() {
+                this.count++;
+                this.updateDisplay(true);
+            },
+            updateDisplay: function(animate = false) {
+                const display = document.getElementById('counter-display');
+                const shell = document.querySelector('#counter-shell');
+                if(!display) return;
+                
+                display.innerText = this.count.toString().padStart(3, '0');
+                if (animate) {
+                    display.classList.remove('text-flash');
+                    void display.offsetWidth;
+                    display.classList.add('text-flash');
+                    
+                    const btn = document.getElementById('btn-increment');
+                    btn.classList.remove('hit-effect');
+                    void btn.offsetWidth;
+                    btn.classList.add('hit-effect');
+                    
+                    if(shell) {
+                        shell.classList.remove('shake-hard');
+                        void shell.offsetWidth;
+                        shell.classList.add('shake-hard');
+                    }
+                    if(navigator.vibrate) navigator.vibrate(20);
+                }
+            },
             render: function() {
                 this.count = 0;
                 return `
                 <div class="flex flex-col items-center justify-center flex-1 w-full fade-in py-10">
-                    <div class="streamline-shell w-full max-w-sm p-8 relative">
+                    <div id="counter-shell" class="streamline-shell w-full max-w-sm p-8 relative">
                         <!-- VFD Screen -->
                         <div class="mb-10 mx-auto w-full">
                             <div class="device-screen p-6 text-center h-40 flex items-center justify-center relative">
@@ -458,9 +651,12 @@
 
                         <!-- Main Button -->
                         <div class="flex flex-col items-center gap-8 mb-4">
-                            <button id="btn-increment" class="active:scale-[0.98] transition-transform w-32 h-32 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-[6px] border-white shadow-[0_10px_20px_rgba(234,88,12,0.3),inset_0_2px_10px_rgba(255,255,255,0.4)] active:shadow-none active:translate-y-1 flex items-center justify-center group ring-4 ring-zinc-100">
+                            <button id="btn-increment" class="transition-transform w-32 h-32 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-[6px] border-white shadow-[0_10px_20px_rgba(234,88,12,0.3),inset_0_2px_10px_rgba(255,255,255,0.4)] active:shadow-none active:translate-y-1 flex items-center justify-center group ring-4 ring-zinc-100 outline-none">
                                 <i data-lucide="plus" class="w-12 h-12 text-white stroke-[4] drop-shadow-md"></i>
                             </button>
+                            <div class="text-zinc-400 text-xs font-bold tracking-widest flex items-center">
+                                点击或按下 <span class="shortcut-key">SPACE</span> 计数
+                            </div>
 
                             <button id="btn-reset" class="atom-btn px-8 py-3 bg-zinc-100 text-zinc-500 text-xs tracking-widest shadow-sm">
                                 系统重置
@@ -476,28 +672,24 @@
                 `;
             },
             mount: function() {
-                const display = document.getElementById('counter-display');
                 const btnInc = document.getElementById('btn-increment');
                 const btnReset = document.getElementById('btn-reset');
-                
-                const update = () => display.innerText = this.count.toString().padStart(3, '0');
-                
-                btnInc.addEventListener('click', () => {
-                    this.count++;
-                    update();
-                    if(navigator.vibrate) navigator.vibrate(10);
-                });
-                
-                btnReset.addEventListener('click', () => {
-                    this.count = 0;
-                    update();
-                });
+                this.updateDisplay();
+                btnInc.addEventListener('click', () => { this.increment(); });
+                btnReset.addEventListener('click', () => { this.count = 0; this.updateDisplay(); });
                 if(window.lucide) window.lucide.createIcons();
             }
         };
 
         // --- ANIME NAMER ---
         window.App.pages.animeNamer = {
+            history: [],
+            handleKey: function(e) {
+                if (e.code === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('btn-gen').click();
+                }
+            },
             render: function() {
                 return `
                 <div class="flex flex-col items-center justify-center flex-1 w-full fade-in py-6">
@@ -506,23 +698,25 @@
                             <div class="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white">
                                 <i data-lucide="sparkles" class="w-5 h-5"></i>
                             </div>
-                            <h2 class="text-lg font-black text-zinc-700 tracking-wider">二次元起名器</h2>
+                            <h2 class="text-lg font-black text-zinc-700 tracking-wider">味儿超冲</h2>
                         </div>
 
-                        <div class="device-screen min-h-[160px] flex items-center justify-center mb-8 p-6 bg-[#1a0510]">
+                        <div class="device-screen min-h-[160px] flex flex-col items-center justify-center mb-6 p-6 bg-[#1a0510]">
                            <h2 id="name-display" class="relative z-10 text-4xl font-black text-center text-pink-400 break-all leading-relaxed drop-shadow-[0_0_8px_rgba(244,114,182,0.8)] tracking-wide">
                              <span class="text-zinc-700 text-sm font-bold tracking-widest animate-pulse">等待指令...</span>
                            </h2>
                         </div>
+                        
+                        <div class="mb-8 px-4 py-2 bg-zinc-100 rounded-lg border-l-4 border-pink-400">
+                             <div class="text-[10px] font-bold text-zinc-400 mb-1 tracking-widest">历史记录</div>
+                             <div id="history-list" class="flex flex-col gap-1 h-20 overflow-y-auto custom-scrollbar">
+                                 <div class="text-zinc-300 text-xs italic">暂无记录</div>
+                             </div>
+                        </div>
 
-                        <div class="flex gap-4 w-full">
-                            <button id="btn-gen" class="flex-1 bg-zinc-800 text-white border-b-4 border-zinc-950 rounded-xl py-4 font-bold tracking-widest text-sm flex items-center justify-center gap-2 shadow-xl active:translate-y-1 active:border-b-0 transition-all hover:bg-zinc-700">
-                                <i data-lucide="shuffle" class="w-4 h-4 text-pink-400"></i>
-                                <span>启动生成</span>
-                            </button>
-                            
-                            <button id="btn-copy" class="atom-btn w-16 flex items-center justify-center hover:text-teal-600 bg-white">
-                                <i data-lucide="copy" class="w-5 h-5"></i>
+                        <div class="flex flex-col gap-4">
+                            <button id="btn-gen" class="atom-btn py-4 text-sm tracking-widest bg-white hover:bg-pink-50 text-pink-600 border-pink-200 border-b-pink-300">
+                                随机生成 <span class="shortcut-key ml-2">ENTER</span>
                             </button>
                         </div>
                     </div>
@@ -530,81 +724,145 @@
                 `;
             },
             mount: function() {
-                const prefixes = ["少女", "旅人", "勇者", "魔神", "终焉", "灰烬", "空想", "弑神", "奥术", "虚空", "神授", "诸神", "灵子", "不灭", "湮灭", "超载", "奇迹", "共鸣", "嗜血", "灵魂", "灾厄", "究极", "超越", "光明", "混沌", "希望", "绝望", "灭亡", "无限", "无想", "悲鸣", "原初", "心象", "星屑", "白夜", "零点", "绝对", "幻想", "沉默", "熔解", "弥生", "水无", "千年", "暴走", "青枫", "浮世", "胧月", "红莲", "黄泉", "鬼杀", "妖怪", "人间", "伊甸", "银河", "破碎", "真理", "空想", "天命", "死亡", "爆裂", "异邦", "の未来"];
-                const suffixes = ["代码", "计划", "指令", "结界", "领域", "地带", "力量", "王冠", "次元", "风暴", "黎明", "地狱", "枷锁", "梦境", "轮回", "沙漏", "残响", "之花", "之魂", "之翼", "之心", "默示录", "序曲", "终章", "诗篇", "战车", "阳炎", "红炎", "失格", "宣告", "审判", "契约", "乐队", "杀手", "使徒", "统领", "纹章", "深渊", "鸟居", "特攻", "游戏", "英雄", "余晖", "纪元", "核心", "武装", "战争", "此端", "彼端", "纷争", "教会", "禁止", "转生", "三日月", "圆舞曲", "协奏曲", "奏鸣曲", "狂想曲", "华尔兹", "理想乡", "决战兵器"];
-
-                const btnGen = document.getElementById('btn-gen');
-                const btnCopy = document.getElementById('btn-copy');
+                const btn = document.getElementById('btn-gen');
                 const display = document.getElementById('name-display');
-                
-                const rnd = (max) => Math.floor(Math.random() * max);
+                const historyList = document.getElementById('history-list');
+                const prefixes = [ "少女", "旅人", "勇者", "魔神", "终焉", "灰烬", "空想", "弑神", "奥术", "虚空", "神授", "诸神", "灵子", "不灭", "湮灭", "超载", "奇迹", "共鸣", "嗜血", "灵魂", "灾厄", "究极", "超越", "光明", "混沌", "希望", "绝望", "灭亡", "无限", "无想", "悲鸣", "原初", "心象", "星屑", "白夜", "零点", "绝对", "幻想", "沉默", "熔解", "弥生", "水无", "千年", "暴走", "青枫", "浮世", "胧月", "红莲", "黄泉", "鬼杀", "妖怪", "人间", "伊甸", "银河", "破碎", "真理", "空想", "天命", "死亡", "爆裂", "异邦", "の未来" ];
+                const suffixes = [ "代码", "计划", "指令", "结界", "领域", "地带", "力量", "王冠", "次元", "风暴", "黎明", "地狱", "枷锁", "梦境", "轮回", "沙漏", "残响", "之花", "之魂", "之翼", "之心", "默示录", "序曲", "终章", "诗篇", "战车", "阳炎", "红炎", "失格", "宣告", "审判", "契约", "乐队", "杀手", "使徒", "统领", "纹章", "深渊", "鸟居", "特攻", "游戏", "英雄", "余晖", "纪元", "核心", "武装", "战争", "此端", "彼端", "纷争", "教会", "禁止", "转生", "三日月", "圆舞曲", "协奏曲", "奏鸣曲", "狂想曲", "华尔兹", "理想乡", "决战兵器" ];
 
                 const generateName = () => {
-                    const prefixIndex = rnd(prefixes.length);
-                    const suffixIndex = rnd(suffixes.length);
-                    
-                    let codeName = "";
+                    const r = () => Math.random();
+                    const ri = (max) => Math.floor(Math.random() * max);
+                    const prefixIdx = ri(prefixes.length);
+                    const suffixIdx = ri(suffixes.length);
+                    let prefix = prefixes[prefixIdx];
+                    let suffix = suffixes[suffixIdx];
+                    let code = "";
                     let story = "";
-
-                    const codeRoll = rnd(200);
-                    if (codeRoll < 5) codeName = "代号:";
-                    else if (codeRoll < 7) codeName = "Re:";
-                    else if (codeRoll === 8) codeName = "The ";
-                    else if (codeRoll === 9) codeName = "此乃";
-                    else if (codeRoll === 10) codeName = "其为";
-
-                    const storyRoll = rnd(200);
-                    if (storyRoll >= 11 && storyRoll <= 12) story = "物语";
-                    else if (storyRoll >= 13 && storyRoll <= 15) story = "传说";
-                    else if (storyRoll === 16) story = "与猫";
-                    else if (storyRoll === 17) story = "战线";
-                    else if (storyRoll === 18) story = "战纪";
-                    else if (storyRoll === 19) story = "英雄传";
-
+                    const roll = ri(200);
+                    if (roll < 5) code = "代号:";
+                    else if (roll < 7) code = "Re:";
+                    else if (roll === 7) code = "The ";
+                    else if (roll === 8) code = "此乃";
+                    else if (roll === 9) code = "其为";
+                    else if (roll >= 10 && roll < 12) story = "物语";
+                    else if (roll >= 12 && roll < 15) story = "传说";
+                    else if (roll === 15) story = "与猫";
+                    else if (roll === 16) story = "战线";
+                    else if (roll === 17) story = "战纪";
+                    else if (roll === 18) story = "英雄传";
                     let extraPrefix = "";
-                    if (rnd(100) < 4) extraPrefix = prefixes[rnd(prefixes.length)];
-
+                    if (ri(100) < 4) extraPrefix = prefixes[ri(prefixes.length)];
                     let star = "";
-                    if (rnd(100) < 4) star = "☆";
-
-                    const pText = prefixes[prefixIndex];
-                    const sText = suffixes[suffixIndex];
-
-                    // Inversion Logic (5%)
-                    if (rnd(100) < 5) {
-                         if (sText.startsWith("の") || sText.startsWith("之")) {
-                             return codeName + extraPrefix + sText.substring(1) + "の" + pText + story;
-                         }
-                         return codeName + extraPrefix + sText + star + pText + story;
+                    if (ri(100) < 4) star = "☆";
+                    const isReverse = ri(100) < 5;
+                    let result = "";
+                    if (isReverse) {
+                        if (suffix.startsWith("の") || suffix.startsWith("之")) result = code + extraPrefix + suffix.substring(1) + "の" + prefix + story;
+                        else result = code + extraPrefix + suffix + star + prefix + story;
+                    } else {
+                        if (prefix.startsWith("の") || prefix.startsWith("之")) result = code + extraPrefix + prefix.substring(1) + "の" + suffix + story;
+                        else result = code + extraPrefix + prefix + star + suffix + story;
                     }
-
-                    // Normal Logic
-                    if (pText.startsWith("の") || pText.startsWith("之")) {
-                        return codeName + extraPrefix + pText.substring(1) + "の" + sText + story;
-                    }
-                    return codeName + extraPrefix + pText + star + sText + story;
+                    return result.replace("用户昵称", "未来");
                 };
 
-                let currentName = "";
-
-                btnGen.addEventListener('click', () => {
-                    // Start animation with simplified placeholder chars
-                    let i = 0;
-                    const interval = setInterval(() => {
-                        // Use some katakana/kanji as noise for anime feel, or just simple chars
-                        const noise = "未来幻想奇迹".split('');
-                        display.innerText = noise[Math.floor(Math.random() * noise.length)] + noise[Math.floor(Math.random() * noise.length)];
-                        i++;
-                        if(i > 8) {
-                            clearInterval(interval);
-                            currentName = generateName();
-                            display.innerText = currentName;
-                        }
-                    }, 50);
+                btn.addEventListener('click', () => {
+                    const name = generateName();
+                    display.innerText = name;
+                    this.history.unshift(name);
+                    if(this.history.length > 5) this.history.pop();
+                    historyList.innerHTML = this.history.map(n => `<div class="text-sm font-mono text-zinc-600 border-b border-zinc-200 pb-1 last:border-0">${n}</div>`).join('');
                 });
+                if(window.lucide) window.lucide.createIcons();
+            }
+        };
 
-                btnCopy.addEventListener('click', () => {
-                    if(currentName) navigator.clipboard.writeText(currentName);
+        // --- DICE ROLLER ---
+        window.App.pages.diceRoller = {
+            history: [],
+            rolling: false,
+            render: function() {
+                return `
+                <div class="flex flex-col items-center justify-center flex-1 w-full fade-in py-6">
+                    <div class="streamline-shell w-full max-w-lg p-8 bg-gradient-to-br from-white to-indigo-50">
+                        <div class="flex items-center gap-3 mb-6 border-b border-zinc-200 pb-4">
+                            <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white">
+                                <i data-lucide="box" class="w-5 h-5"></i>
+                            </div>
+                            <h2 class="text-lg font-black text-zinc-700 tracking-wider">电子骰子</h2>
+                        </div>
+                        <div class="device-screen h-64 flex items-center justify-center mb-6 bg-[#0c0a20] relative">
+                             <div class="dice-scene">
+                                <div id="dice-cube" class="dice-cube">
+                                    <div class="dice-face dice-face-front">?</div>
+                                    <div class="dice-face dice-face-back">?</div>
+                                    <div class="dice-face dice-face-right">?</div>
+                                    <div class="dice-face dice-face-left">?</div>
+                                    <div class="dice-face dice-face-top">?</div>
+                                    <div class="dice-face dice-face-bottom">?</div>
+                                </div>
+                             </div>
+                             <div id="dice-result-overlay" class="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden z-20">
+                                <span class="text-6xl font-black text-indigo-400 drop-shadow-[0_0_15px_rgba(129,140,248,0.8)]">20</span>
+                             </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 tracking-widest block mb-2">骰子面数</label>
+                                <select id="dice-sides" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                                    <option value="4">D4 (4面)</option>
+                                    <option value="6">D6 (6面)</option>
+                                    <option value="20" selected>D20 (20面)</option>
+                                    <option value="100">D100 (100面)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-zinc-400 tracking-widest block mb-2">数量 (MAX 20)</label>
+                                <input id="dice-count" type="number" min="1" max="20" value="1" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                            </div>
+                        </div>
+                        <div class="mb-6 px-4 py-2 bg-zinc-100 rounded-lg border-l-4 border-indigo-400">
+                             <div class="text-[10px] font-bold text-zinc-400 mb-1 tracking-widest">投掷记录</div>
+                             <div id="dice-history" class="h-16 overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                                 <div class="text-zinc-300 text-xs italic">暂无记录</div>
+                             </div>
+                        </div>
+                        <button id="btn-roll" class="atom-btn py-4 w-full text-indigo-600 bg-white border-indigo-200 border-b-indigo-300">
+                            投掷骰子
+                        </button>
+                    </div>
+                </div>
+                `;
+            },
+            mount: function() {
+                const cube = document.getElementById('dice-cube');
+                const btn = document.getElementById('btn-roll');
+                const sidesSelect = document.getElementById('dice-sides');
+                const countInput = document.getElementById('dice-count');
+                const historyLog = document.getElementById('dice-history');
+                const overlay = document.getElementById('dice-result-overlay');
+                btn.addEventListener('click', async () => {
+                    if (this.rolling) return;
+                    this.rolling = true;
+                    overlay.classList.add('hidden');
+                    let count = parseInt(countInput.value);
+                    if (count > 20) count = 20;
+                    if (count < 1) count = 1;
+                    countInput.value = count;
+                    const sides = parseInt(sidesSelect.value);
+                    cube.classList.add('dice-rolling');
+                    await new Promise(r => setTimeout(r, 600));
+                    cube.classList.remove('dice-rolling');
+                    const results = [];
+                    for(let i=0; i<count; i++) results.push(Math.floor(Math.random() * sides) + 1);
+                    const total = results.reduce((a,b)=>a+b, 0);
+                    overlay.innerHTML = `<div class="text-center"><div class="text-6xl font-black text-indigo-400 drop-shadow-[0_0_15px_rgba(129,140,248,0.8)]">${total}</div><div class="text-xs text-indigo-200 font-mono mt-2">[${results.join(', ')}]</div></div>`;
+                    overlay.classList.remove('hidden');
+                    this.history.unshift(`D${sides} x ${count} = ${total} [${results.join(',')}]`);
+                    if(this.history.length > 5) this.history.pop();
+                    historyLog.innerHTML = this.history.map(h => `<div class="text-xs font-mono text-zinc-600 border-b border-zinc-200 pb-1 last:border-0">${h}</div>`).join('');
+                    this.rolling = false;
                 });
                 if(window.lucide) window.lucide.createIcons();
             }
@@ -612,269 +870,205 @@
 
         // --- TEXT MAP EDITOR ---
         window.App.pages.textMapEditor = {
-            rows: 10,
-            cols: 10,
-            MAX_SIZE: 40,
-            mapData: [],
-            fontFamily: "'MS Gothic', monospace",
-
-            initMap: function() {
-                if (this.mapData.length === 0) {
-                    this.mapData = Array(this.rows).fill('Ｘ'.repeat(this.cols));
-                }
-            },
-
+            config: { rows: 10, cols: 10, font: "'MS Gothic', monospace", maxSize: 40 },
             render: function() {
-                this.initMap();
-                const specialChars = "① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ♨ ✟ ※ ◎ □ ■ ♠ ♥ ♦ ♣ Ｘ";
-                const boxDrawingRows = ["┌┬┐┏┳┓╔╦╗╭─╮", "├┼┤┣╋┫╠╬╣│╳┃", "└┴┘┗┻┛╚╩╝╰━╯", "┍┑┎┒╒╕╓╖╱╲┄┅", "┕┙┖┚╘╛╙╜╲╱┆┇"];
-
                 return `
-                <div class="flex flex-col xl:flex-row gap-8 w-full fade-in items-start pb-20">
-                    <!-- LEFT PANEL (Editor) -->
-                    <div class="streamline-shell flex-1 w-full p-6 md:p-8 bg-white">
-                        
-                        <div class="flex flex-col xl:flex-row items-start xl:items-center justify-between mb-6 pb-6 border-b-2 border-zinc-100 gap-6">
+                <div class="flex flex-col items-center justify-center flex-1 w-full fade-in py-6">
+                    <div class="streamline-shell w-full p-6 bg-gradient-to-br from-white to-teal-50">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6 border-b border-zinc-200 pb-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white shadow-md border-2 border-white">
-                                    <i data-lucide="settings-2" class="w-5 h-5"></i>
+                                <div class="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white">
+                                    <i data-lucide="map" class="w-5 h-5"></i>
                                 </div>
-                                <h2 class="font-black text-lg text-zinc-800 tracking-wider">地图参数</h2>
+                                <div>
+                                    <h2 class="text-lg font-black text-zinc-700 tracking-wider">文字地图编辑器</h2>
+                                    <div class="text-[10px] text-zinc-400 font-bold">ERA 终端制图</div>
+                                </div>
                             </div>
-                            <div class="flex flex-wrap gap-3 w-full xl:w-auto">
-                                <button id="btn-open-import" class="atom-btn px-6 py-2 text-xs flex items-center gap-2 hover:text-teal-600 bg-white">
-                                    <i data-lucide="upload" class="w-4 h-4"></i> 导入
+                            <div class="flex items-center gap-2">
+                                <button id="btn-import" class="px-3 py-2 bg-white border border-zinc-300 rounded text-xs font-bold text-zinc-600 hover:bg-zinc-50 flex items-center gap-1 shadow-sm">
+                                    <i data-lucide="upload" class="w-3 h-3"></i> 导入
                                 </button>
-                                <button id="btn-copy-all" class="atom-btn px-6 py-2 text-xs flex items-center gap-2 hover:text-orange-600 bg-white">
-                                    <i data-lucide="clipboard-copy" class="w-4 h-4"></i> 复制全图
+                                <button id="btn-copy-all" class="px-3 py-2 bg-teal-500 border border-teal-600 rounded text-xs font-bold text-white hover:bg-teal-600 flex items-center gap-1 shadow-sm">
+                                    <i data-lucide="copy" class="w-3 h-3"></i> 复制全图
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Controls Row -->
-                        <div class="flex flex-col md:flex-row gap-6 mb-6">
-                            <!-- Size -->
-                            <div class="flex-1 bg-zinc-50 rounded-2xl p-4 border border-zinc-200">
-                                <label class="text-xs font-bold text-zinc-400 mb-2 block tracking-wider">尺寸 (最大 ${this.MAX_SIZE})</label>
-                                <div class="flex items-center gap-2">
-                                    <input id="input-rows" type="number" min="1" max="${this.MAX_SIZE}" value="${this.rows}" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 font-mono font-bold text-zinc-700 text-center focus:border-teal-500 outline-none">
-                                    <span class="text-zinc-300 font-bold">×</span>
-                                    <input id="input-cols" type="number" min="1" max="${this.MAX_SIZE}" value="${this.cols}" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 font-mono font-bold text-zinc-700 text-center focus:border-teal-500 outline-none">
+                        <div class="flex flex-col lg:flex-row gap-6">
+                            <div class="flex-1 min-w-0">
+                                <div class="device-screen bg-black min-h-[700px] p-6 overflow-auto relative">
+                                    <div class="flex justify-between text-[10px] font-mono text-teal-700 mb-2 select-none">
+                                        <span>行: <span id="lbl-rows">10</span></span>
+                                        <span>列: <span id="lbl-cols">10</span></span>
+                                        <span>字体: <span id="lbl-font">MS Gothic</span></span>
+                                    </div>
+                                    <div id="map-container" class="flex flex-col gap-0 w-max min-w-full border border-zinc-800 bg-black">
+                                        <!-- Rows -->
+                                    </div>
                                 </div>
                             </div>
-                            <!-- Font Selector -->
-                            <div class="flex-1 bg-zinc-50 rounded-2xl p-4 border border-zinc-200">
-                                 <div class="flex justify-between items-center mb-2">
-                                    <label class="text-xs font-bold text-zinc-400 flex items-center gap-1 tracking-wider">
-                                      字体选择
-                                    </label>
-                                    <a href="https://gitgud.io/era-games-zh/meta/eraFonts" target="_blank" class="flex items-center gap-1 text-[10px] font-bold text-teal-600 hover:underline">
-                                      <i data-lucide="download" class="w-3 h-3"></i> 下载
-                                    </a>
-                                 </div>
-                                 <div class="relative">
-                                     <select id="select-font" class="appearance-none w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm font-bold text-zinc-700 focus:border-teal-500 outline-none pr-8">
-                                       <option value="'MS Gothic', monospace">MS Gothic (era默认)</option>
-                                       <option value="'ERA MONO SC'">ERA MONO SC</option>
-                                       <option value="'EraPixel'">EraPixel</option>
-                                     </select>
-                                     <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none"></i>
-                                 </div>
-                            </div>
-                        </div>
 
-                        <!-- Editor Area (Black Screen) -->
-                        <div class="device-screen p-4 pb-8 min-h-[700px] flex flex-col bg-[#050505] border-[#3f3f46]">
-                            <div class="flex-1 overflow-auto rounded-lg border border-zinc-800 p-6 relative">
-                                <div class="absolute inset-0 bg-gradient-to-b from-teal-900/10 to-transparent pointer-events-none"></div>
-                                <div id="grid-container" class="flex flex-col gap-0 min-w-max pb-4 pr-4 relative z-10"></div>
-                            </div>
-                            <div class="text-center mt-3">
-                                <span class="text-[10px] font-bold text-teal-900 tracking-[0.3em]">终端显示</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- RIGHT PANEL (Palette) -->
-                    <div class="streamline-shell w-full xl:w-80 p-6 bg-white sticky top-6 z-20">
-                         <div class="flex items-center gap-2 mb-6 pb-4 border-b border-zinc-100">
-                            <i data-lucide="layout-grid" class="w-5 h-5 text-orange-500"></i>
-                            <h2 class="font-black text-sm text-zinc-700 tracking-wider">字符工具箱</h2>
-                         </div>
-                        
-                        <div class="space-y-6">
-                            <div>
-                                <h3 class="text-[10px] font-black text-zinc-400 mb-3 tracking-widest">常用符号</h3>
-                                <div class="grid grid-cols-5 gap-2">
-                                     ${specialChars.split(' ').map(c => `<button onclick="navigator.clipboard.writeText('${c}')" class="aspect-square flex items-center justify-center bg-zinc-50 border border-zinc-200 rounded-lg hover:bg-orange-500 hover:border-orange-500 hover:text-white transition-all text-sm font-bold shadow-sm active:scale-95">${c}</button>`).join('')}
+                            <div class="w-full lg:w-96 flex flex-col gap-6">
+                                <div class="bg-zinc-100 p-4 rounded-lg border border-zinc-200">
+                                    <h3 class="text-xs font-bold text-zinc-500 tracking-widest mb-3 uppercase">地图参数</h3>
+                                    <div class="grid grid-cols-2 gap-3 mb-4">
+                                        <div>
+                                            <label class="text-[10px] font-bold text-zinc-400 block mb-1">宽度 (W)</label>
+                                            <input id="inp-cols" type="number" min="1" max="40" value="10" class="w-full bg-white border border-zinc-300 rounded px-2 py-1 text-sm font-mono text-center">
+                                        </div>
+                                        <div>
+                                            <label class="text-[10px] font-bold text-zinc-400 block mb-1">高度 (H)</label>
+                                            <input id="inp-rows" type="number" min="1" max="40" value="10" class="w-full bg-white border border-zinc-300 rounded px-2 py-1 text-sm font-mono text-center">
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <label class="text-[10px] font-bold text-zinc-400 block mb-1">字体选择</label>
+                                        <select id="sel-font" class="w-full bg-white border border-zinc-300 rounded px-2 py-1 text-xs font-bold text-zinc-700">
+                                            <option value="'MS Gothic', monospace">MS Gothic (era默认)</option>
+                                            <option value="'ERA MONO SC', 'MS Gothic', monospace">ERA MONO SC (需安装)</option>
+                                            <option value="'EraPixel', 'MS Gothic', monospace">EraPixel (需安装)</option>
+                                        </select>
+                                        <a href="https://gitgud.io/era-games-zh/meta/eraFonts" target="_blank" class="block text-right text-[10px] text-teal-600 font-bold mt-1 hover:underline">下载字体资源 ></a>
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <h3 class="text-[10px] font-black text-zinc-400 mb-3 tracking-widest">制表符</h3>
-                                <div class="space-y-1 bg-zinc-50 p-3 rounded-xl border border-zinc-200">
-                                   ${boxDrawingRows.map(row => `
-                                     <div class="flex gap-1 justify-between">
-                                        ${row.split('').map(c => `<button onclick="navigator.clipboard.writeText('${c}')" class="flex-1 aspect-square flex items-center justify-center bg-white border border-zinc-200 rounded hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all text-base font-mono leading-none shadow-sm active:scale-90">${c}</button>`).join('')}
-                                     </div>
-                                   `).join('')}
+                                <div class="bg-zinc-100 p-4 rounded-lg border border-zinc-200 flex-1">
+                                    <h3 class="text-xs font-bold text-zinc-500 tracking-widest mb-3 uppercase">字符工具箱</h3>
+                                    <div class="grid grid-cols-12 gap-px bg-zinc-200 border border-zinc-200 rounded overflow-hidden">
+                                        ${['┌','┬','┐','┏','┳','┓','╔','╦','╗','╭','─','╮',
+                                           '├','┼','┤','┣','╋','┫','╠','╬','╣','│','╳','┃',
+                                           '└','┴','┘','┗','┻','┛','╚','╩','╝','╰','━','╯',
+                                           '┍','┑','┎','┒','╒','╕','╓','╖','╱','╲','┄','┅',
+                                           '┕','┙','┖','┚','╘','╛','╙','╜','╲','╱','┆','┇',
+                                           '①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','♨','✟',
+                                           '※','◎','□','■','♠','♥','♦','♣'].map(c => `<button class="btn-char w-full h-6 bg-white hover:bg-teal-500 hover:text-white font-mono text-xs flex items-center justify-center transition-colors">${c}</button>`).join('')}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- MODAL -->
-                    <div id="modal-import" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div class="bg-white rounded-[2rem] p-8 w-full max-w-2xl shadow-2xl border-4 border-white relative">
-                            <button id="btn-close-modal" class="absolute top-6 right-6 p-2 rounded-full bg-zinc-100 hover:bg-red-100 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
-                            <h3 class="text-2xl font-black text-zinc-800 mb-2 tracking-tight">导入地图数据</h3>
-                            <textarea id="import-area" class="w-full h-64 bg-zinc-50 rounded-xl p-4 font-mono text-sm border-2 border-zinc-200 focus:border-teal-500 outline-none resize-none mb-6 leading-relaxed" placeholder="在此粘贴文本地图..."></textarea>
-                            <div class="flex justify-end gap-4">
-                                <button id="btn-cancel-import" class="px-6 py-2 rounded-full font-bold text-zinc-500 hover:bg-zinc-100 transition-colors">取消</button>
-                                <button id="btn-confirm-import" class="bg-zinc-800 text-white px-8 py-2 rounded-full font-bold hover:bg-zinc-700">确认导入</button>
+                    <div id="modal-import" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+                        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg border-4 border-zinc-200">
+                            <h3 class="text-lg font-black text-zinc-800 mb-4">导入地图文本</h3>
+                            <textarea id="import-text" class="w-full h-48 bg-zinc-50 border border-zinc-300 rounded-lg p-3 font-mono text-xs mb-4 focus:ring-2 focus:ring-teal-500 outline-none" placeholder="在此处粘贴文本..."></textarea>
+                            <div class="flex justify-end gap-3">
+                                <button id="btn-cancel-import" class="px-4 py-2 text-zinc-500 font-bold hover:bg-zinc-100 rounded">取消</button>
+                                <button id="btn-confirm-import" class="px-4 py-2 bg-teal-500 text-white font-bold rounded hover:bg-teal-600">确认导入</button>
                             </div>
                         </div>
                     </div>
                 </div>
                 `;
             },
-
             mount: function() {
-                const gridContainer = document.getElementById('grid-container');
-                const inputRows = document.getElementById('input-rows');
-                const inputCols = document.getElementById('input-cols');
-                const selectFont = document.getElementById('select-font');
+                const container = document.getElementById('map-container');
+                const inpRows = document.getElementById('inp-rows');
+                const inpCols = document.getElementById('inp-cols');
+                const selFont = document.getElementById('sel-font');
+                const lblRows = document.getElementById('lbl-rows');
+                const lblCols = document.getElementById('lbl-cols');
+                const lblFont = document.getElementById('lbl-font');
                 const btnCopyAll = document.getElementById('btn-copy-all');
-                const btnOpenImport = document.getElementById('btn-open-import');
-                const modalImport = document.getElementById('modal-import');
-                const btnCloseModal = document.getElementById('btn-close-modal');
+                const modal = document.getElementById('modal-import');
+                const btnImport = document.getElementById('btn-import');
                 const btnCancelImport = document.getElementById('btn-cancel-import');
                 const btnConfirmImport = document.getElementById('btn-confirm-import');
-                const importArea = document.getElementById('import-area');
-
-                const renderGrid = () => {
-                    gridContainer.innerHTML = this.mapData.map((row, i) => `
-                        <div class="flex items-center group relative" style="height: 1.5em">
-                           <div class="absolute -left-8 top-0 h-full flex items-center w-6 justify-end text-[12px] text-zinc-600 font-mono select-none">${i+1}</div>
-                           <input 
-                             type="text" 
-                             data-idx="${i}" 
-                             value="${row}" 
-                             style="font-family: ${this.fontFamily}; width: calc(${this.cols * 1.1}em + 4rem); height: 1.5em; line-height: 1.5; font-size: 1.5rem; letter-spacing: 0px;" 
-                             class="map-input block bg-transparent text-teal-50 border-none outline-none p-0 m-0 cursor-text selection:bg-teal-500/50" 
-                             spellcheck="false"
-                           />
-                           <button onclick="window.App.pages.textMapEditor.copyRow(${i})" class="ml-2 p-1.5 rounded-md transition-all duration-200 text-zinc-600 opacity-0 group-hover:opacity-100 hover:text-teal-400 hover:bg-zinc-800"><i data-lucide="copy" class="w-4 h-4"></i></button>
-                        </div>
-                    `).join('');
-                    if(window.lucide) window.lucide.createIcons();
-                };
-
-                inputRows.addEventListener('change', (e) => this.updateSize(parseInt(e.target.value), this.cols));
-                inputCols.addEventListener('change', (e) => this.updateSize(this.rows, parseInt(e.target.value)));
-                
-                selectFont.addEventListener('change', (e) => {
-                    this.fontFamily = e.target.value;
-                    renderGrid();
-                });
-
-                gridContainer.addEventListener('input', (e) => {
-                    if (e.target.classList.contains('map-input')) {
-                        const idx = parseInt(e.target.dataset.idx);
-                        this.mapData[idx] = e.target.value;
-                    }
-                });
-
-                btnCopyAll.addEventListener('click', () => navigator.clipboard.writeText(this.mapData.join('\n')));
-
-                const toggleModal = (show) => modalImport.classList.toggle('hidden', !show);
-                btnOpenImport.addEventListener('click', () => toggleModal(true));
-                btnCloseModal.addEventListener('click', () => toggleModal(false));
-                btnCancelImport.addEventListener('click', () => toggleModal(false));
-                
-                btnConfirmImport.addEventListener('click', () => {
-                    const text = importArea.value;
-                    if(!text.trim()) return;
-                    
-                    const lines = text.split('\n');
-                    const newRows = Math.min(this.MAX_SIZE, lines.length);
-                    let maxLen = 0;
-                    lines.forEach(l => maxLen = Math.max(maxLen, l.length));
-                    const newCols = Math.min(this.MAX_SIZE, Math.max(1, maxLen));
-
-                    this.rows = newRows;
-                    this.cols = newCols;
-                    inputRows.value = newRows;
-                    inputCols.value = newCols;
-
-                    this.mapData = [];
-                    for(let i=0; i<newRows; i++) {
-                        let line = lines[i] || "";
-                        if (line.length > newCols) line = line.substring(0, newCols);
-                        if (line.length < newCols) line = line + 'Ｘ'.repeat(newCols - line.length);
-                        this.mapData.push(line);
-                    }
-                    renderGrid();
-                    importArea.value = '';
-                    toggleModal(false);
-                });
-
-                const checkFont = (font) => {
-                   if (document.fonts && document.fonts.check) return document.fonts.check(`12px ${font}`);
-                   return true; 
-                };
-                
-                setTimeout(() => {
-                    Array.from(selectFont.options).forEach(opt => {
-                         if (opt.value.includes('Gothic')) return;
-                         if (!checkFont(opt.value)) {
-                             opt.disabled = true;
-                             opt.innerText += " (未安装)";
-                             opt.style.color = "#d4d4d8";
+                const txtImport = document.getElementById('import-text');
+                let mapData = [];
+                const checkFonts = () => {
+                     const options = selFont.querySelectorAll('option');
+                     options.forEach(opt => {
+                         if (opt.innerText.includes('需安装')) {
+                             const fontName = opt.value.split(',')[0].replace(/['"]/g, '');
+                             if (!document.fonts.check(`12px ${fontName}`)) {
+                                 opt.disabled = true;
+                                 opt.style.color = '#ccc';
+                             }
                          }
+                     });
+                };
+                document.fonts.ready.then(checkFonts);
+                const initMap = (r, c) => {
+                    this.config.rows = Math.min(Math.max(r, 1), this.config.maxSize);
+                    this.config.cols = Math.min(Math.max(c, 1), this.config.maxSize);
+                    inpRows.value = this.config.rows;
+                    inpCols.value = this.config.cols;
+                    lblRows.innerText = this.config.rows;
+                    lblCols.innerText = this.config.cols;
+                    const newData = [];
+                    for(let i=0; i<this.config.rows; i++) {
+                        let rowStr = "";
+                        if (mapData[i]) rowStr = mapData[i].padEnd(this.config.cols, 'Ｘ').substring(0, this.config.cols);
+                        else rowStr = 'Ｘ'.repeat(this.config.cols);
+                        newData.push(rowStr);
+                    }
+                    mapData = newData;
+                    renderGrid();
+                };
+                const renderGrid = () => {
+                    container.innerHTML = '';
+                    mapData.forEach((rowText, idx) => {
+                        const rowEl = document.createElement('div');
+                        rowEl.className = "flex items-center gap-2 group w-full";
+                        const lineNum = document.createElement('div');
+                        lineNum.className = "text-[10px] text-zinc-600 font-mono w-4 text-right select-none shrink-0";
+                        lineNum.innerText = idx;
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.value = rowText;
+                        input.className = "bg-transparent text-white font-mono border-none outline-none p-0 m-0 block focus:bg-zinc-900 focus:text-teal-400 selection:bg-teal-500 selection:text-white shrink-0";
+                        input.style.fontFamily = this.config.font;
+                        input.style.fontSize = "1.25rem";
+                        input.style.lineHeight = "1.0";
+                        input.style.letterSpacing = "0px";
+                        input.style.height = "1.0em";
+                        input.style.width = `calc(${this.config.cols * 1.5}em)`; // More generous width calculation
+                        input.style.minWidth = "100%";
+                        input.spellcheck = false;
+                        input.addEventListener('input', (e) => mapData[idx] = e.target.value);
+                        const btnCopy = document.createElement('button');
+                        btnCopy.className = "opacity-0 group-hover:opacity-100 text-teal-600 hover:text-teal-400 shrink-0";
+                        btnCopy.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i>';
+                        btnCopy.onclick = () => navigator.clipboard.writeText(mapData[idx]);
+                        rowEl.appendChild(lineNum);
+                        rowEl.appendChild(input);
+                        rowEl.appendChild(btnCopy);
+                        container.appendChild(rowEl);
                     });
-                }, 500);
-
-                renderGrid();
-            },
-
-            updateSize: function(newRows, newCols) {
-                newRows = Math.min(this.MAX_SIZE, Math.max(1, newRows));
-                newCols = Math.min(this.MAX_SIZE, Math.max(1, newCols));
-                this.rows = newRows;
-                this.cols = newCols;
-
-                if (newRows > this.mapData.length) {
-                    for(let i=this.mapData.length; i<newRows; i++) this.mapData.push('Ｘ'.repeat(newCols));
-                } else if (newRows < this.mapData.length) {
-                    this.mapData.splice(newRows);
-                }
-
-                this.mapData = this.mapData.map(row => {
-                    if (newCols > row.length) return row + 'Ｘ'.repeat(newCols - row.length);
-                    else if (newCols < row.length) return row.substring(0, newCols);
-                    return row;
-                });
-
-                const inputRows = document.getElementById('input-rows');
-                const inputCols = document.getElementById('input-cols');
-                if(inputRows) inputRows.value = newRows;
-                if(inputCols) inputCols.value = newCols;
-                
-                const grid = document.getElementById('grid-container');
-                if(grid) {
-                     grid.innerHTML = this.mapData.map((row, i) => `
-                        <div class="flex items-center group relative" style="height: 1.5em">
-                           <div class="absolute -left-8 top-0 h-full flex items-center w-6 justify-end text-[12px] text-zinc-600 font-mono select-none">${i+1}</div>
-                           <input type="text" data-idx="${i}" value="${row}" style="font-family: ${this.fontFamily}; width: calc(${this.cols * 1.1}em + 4rem); height: 1.5em; line-height: 1.5; font-size: 1.5rem; letter-spacing: 0px;" class="map-input block bg-transparent text-teal-50 border-none outline-none p-0 m-0 cursor-text selection:bg-teal-500/50" spellcheck="false" />
-                           <button onclick="window.App.pages.textMapEditor.copyRow(${i})" class="ml-2 p-1.5 rounded-md transition-all duration-200 text-zinc-600 opacity-0 group-hover:opacity-100 hover:text-teal-400 hover:bg-zinc-800"><i data-lucide="copy" class="w-4 h-4"></i></button>
-                        </div>
-                    `).join('');
                     if(window.lucide) window.lucide.createIcons();
-                }
-            },
-
-            copyRow: function(idx) {
-                if(this.mapData[idx]) navigator.clipboard.writeText(this.mapData[idx]);
+                };
+                inpRows.addEventListener('change', (e) => initMap(parseInt(e.target.value), this.config.cols));
+                inpCols.addEventListener('change', (e) => initMap(this.config.rows, parseInt(e.target.value)));
+                selFont.addEventListener('change', (e) => {
+                    this.config.font = e.target.value;
+                    lblFont.innerText = e.target.options[e.target.selectedIndex].text.split(' ')[0];
+                    renderGrid();
+                });
+                document.querySelectorAll('.btn-char').forEach(btn => {
+                    btn.addEventListener('click', () => navigator.clipboard.writeText(btn.innerText));
+                });
+                btnCopyAll.addEventListener('click', () => {
+                    navigator.clipboard.writeText(mapData.join('\n'));
+                    btnCopyAll.innerText = "已复制!";
+                    setTimeout(() => btnCopyAll.innerHTML = '<i data-lucide="copy" class="w-3 h-3"></i> 复制全图', 2000);
+                });
+                btnImport.onclick = () => modal.classList.remove('hidden');
+                btnCancelImport.onclick = () => modal.classList.add('hidden');
+                btnConfirmImport.onclick = () => {
+                    const text = txtImport.value;
+                    const lines = text.split('\n');
+                    if (lines.length > 0) {
+                        const newRows = lines.length;
+                        let newCols = 0;
+                        lines.forEach(l => { if(l.length > newCols) newCols = l.length; });
+                        mapData = lines;
+                        initMap(newRows, newCols);
+                    }
+                    modal.classList.add('hidden');
+                    txtImport.value = '';
+                };
+                initMap(10, 10);
+                if(window.lucide) window.lucide.createIcons();
             }
         };
 
