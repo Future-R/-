@@ -72,6 +72,7 @@ window.App.pages.animeNamer = {
             else if (roll === 16) story = "战线";
             else if (roll === 17) story = "战纪";
             else if (roll === 18) story = "英雄传";
+            else if (roll === 19) code = "ERROR:";
             let extraPrefix = "";
             if (ri(100) < 4) extraPrefix = prefixes[ri(prefixes.length)];
             let star = "";
