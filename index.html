@@ -1,70 +1,883 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cosmos Toolkit</title>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>未来工具箱</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Space+Grotesk:wght@300;500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom CSS -->
     <style>
-      body {
-        font-family: 'Space Grotesk', sans-serif;
-        background-color: #e8e8e3;
-        color: #1a1a1a;
-      }
-      .font-mono {
-        font-family: 'JetBrains Mono', monospace;
-      }
-      
-      /* Noise Texture for that analog feel */
-      .bg-noise {
-        position: relative;
-      }
-      .bg-noise::before {
-        content: "";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
-        pointer-events: none;
-        z-index: 50;
-      }
+        :root {
+            --bg-base: #f0f0eb;
+            --chrome-light: #ffffff;
+            --chrome-dark: #d4d4d8;
+            --screen-bg: #09090b;
+        }
 
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 10px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #d4d4d0;
-        border-left: 1px solid #bbb;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #a1a1aa;
-        border-radius: 99px;
-        border: 2px solid #d4d4d0;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #71717A;
-      }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-base);
+            color: #27272a;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(#e5e5e5 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Cassette Tape Style */
+        .cassette-card {
+            background-color: #f2f2f0;
+            border-radius: 6px;
+            position: relative;
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            border: 1px solid #d4d4d8;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .cassette-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                0 10px 15px -3px rgba(0, 0, 0, 0.1), 
+                0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Screw heads */
+        .screw {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d4d4d8;
+            position: absolute;
+            border: 1px solid #a1a1aa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+        .screw::after {
+            content: '';
+            width: 60%;
+            height: 1px;
+            background: #71717a;
+            transform: rotate(45deg);
+        }
+        .screw::before {
+            content: '';
+            width: 60%;
+            height: 1px;
+            background: #71717a;
+            transform: rotate(-45deg);
+            position: absolute;
+        }
+
+        /* Cassette Label Area */
+        .cassette-label {
+            border-radius: 4px;
+            padding: 12px;
+            position: relative;
+            overflow: hidden;
+            height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: white;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        /* Cassette Window */
+        .cassette-window {
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            height: 40px;
+            width: 100%;
+            margin-top: auto;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(0,0,0,0.1);
+        }
+
+        /* Cassette Bottom (Trapezoid feel) */
+        .cassette-bottom {
+            margin-top: 8px;
+            height: 24px;
+            background: #e4e4e7;
+            border-radius: 2px 2px 4px 4px;
+            border: 1px solid #d4d4d8;
+            position: relative;
+            margin-left: 12px;
+            margin-right: 12px;
+        }
+        .cassette-bottom::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #27272a;
+            border-radius: 50%;
+        }
+        .cassette-bottom::after {
+            content: '';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #27272a;
+            border-radius: 50%;
+        }
+
+        /* Screen Style (VFD/CRT) */
+        .device-screen {
+            background-color: var(--screen-bg);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+            border: 4px solid #27272a;
+            border-radius: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Scanline effect overlay */
+        .device-screen::after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 2;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* Streamline Shell */
+        .streamline-shell {
+            background: linear-gradient(135deg, #ffffff 0%, #f4f4f5 100%);
+            border: 4px solid #ffffff;
+            border-radius: 3rem;
+            box-shadow: 
+                0 20px 50px -12px rgba(0,0,0,0.2),
+                inset 0 2px 4px rgba(255,255,255,0.8),
+                0 0 0 1px rgba(0,0,0,0.05); /* Subtle outline */
+        }
+
+        .atom-btn {
+            background: linear-gradient(to bottom, #ffffff, #f4f4f5);
+            border: 1px solid #d4d4d8;
+            border-bottom: 3px solid #d4d4d8;
+            border-radius: 9999px;
+            font-weight: 700;
+            color: #52525b;
+            transition: all 0.1s;
+        }
+        .atom-btn:hover {
+            transform: translateY(-1px);
+            border-bottom-width: 4px;
+            color: #18181b;
+        }
+        .atom-btn:active {
+            transform: translateY(1px);
+            border-bottom-width: 1px;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #18181b;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3f3f46;
+            border: 2px solid #18181b;
+            border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #52525b;
+        }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "react": "https://aistudiocdn.com/react@^19.2.1",
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.556.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.32.0",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.1",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/"
-  }
-}
-</script>
 </head>
-  <body class="bg-noise">
-    <div id="root"></div>
-  </body>
+<body class="min-h-screen flex flex-col selection:bg-orange-500 selection:text-white">
+
+    <!-- App Root -->
+    <div id="app" class="flex flex-col min-h-screen z-10 relative">
+        <!-- Content injected by JS -->
+    </div>
+
+    <!-- MAIN SCRIPT -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.App && window.App.init) {
+                window.App.init();
+            } else {
+                console.error("App failed to initialize.");
+                document.body.innerHTML = "<div class='p-10 text-center'>系统启动失败，请刷新页面。</div>";
+            }
+        });
+
+        window.App = {
+            pages: {},
+            init: function() {
+                console.log("Future Toolkit Initializing...");
+                this.Router.init();
+                this.Router.handleRoute();
+            }
+        };
+
+        // --- ROUTER ---
+        window.App.Router = {
+            routes: {
+                '': 'dashboard',
+                'counter': 'counter',
+                'anime-namer': 'animeNamer',
+                'text-map': 'textMapEditor'
+            },
+
+            init: function() {
+                window.addEventListener('hashchange', () => this.handleRoute());
+                window.addEventListener('popstate', () => this.handleRoute());
+            },
+
+            handleRoute: function() {
+                const hash = window.location.hash.slice(1) || '';
+                const cleanHash = hash.replace(/\/$/, "");
+                const pageName = this.routes[cleanHash] || 'dashboard';
+                const pageModule = window.App.pages[pageName];
+
+                const appContainer = document.getElementById('app');
+                appContainer.innerHTML = window.App.Layout.render(cleanHash);
+
+                const mainContent = document.getElementById('main-content');
+                if (pageModule && mainContent) {
+                    try {
+                        mainContent.innerHTML = pageModule.render();
+                        if (pageModule.mount) pageModule.mount(mainContent);
+                    } catch (e) {
+                        console.error(e);
+                        mainContent.innerHTML = `<div class="text-red-600 p-8">模块加载错误: ${e.message}</div>`;
+                    }
+                }
+
+                if (window.lucide) window.lucide.createIcons();
+                window.scrollTo(0,0);
+            },
+
+            navigate: function(path) {
+                window.location.hash = path;
+            }
+        };
+
+        // --- LAYOUT ---
+        window.App.Layout = {
+            render: function(currentPath) {
+                const isHome = currentPath === '' || currentPath === '/';
+                
+                const backButton = !isHome ? `
+                    <button onclick="window.App.Router.navigate('')"
+                        class="flex items-center gap-2 px-5 py-2 
+                          bg-zinc-100 hover:bg-white
+                          rounded-full border border-zinc-300
+                          shadow-sm hover:shadow
+                          text-zinc-600 font-bold text-sm
+                          transition-all active:scale-95">
+                        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                        <span>返回</span>
+                    </button>
+                ` : '';
+
+                return `
+                <header class="w-full pt-6 px-4 pb-2 relative z-20">
+                    <div class="max-w-6xl mx-auto">
+                        <div class="bg-gradient-to-r from-white to-zinc-50 rounded-[2.5rem] px-8 py-5 flex items-center justify-between shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-white ring-1 ring-zinc-100 relative overflow-hidden">
+                            <!-- Streamline Stripe -->
+                            <div class="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-16 bg-orange-500 rounded-r-full"></div>
+                            
+                            <div class="flex items-center gap-5 cursor-pointer z-10 pl-6" onclick="window.App.Router.navigate('')">
+                                <div class="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-zinc-600 relative overflow-hidden">
+                                    <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
+                                    <i data-lucide="atom" class="w-6 h-6 animate-[spin_10s_linear_infinite]"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <h1 class="text-2xl font-black text-zinc-800 tracking-wider flex items-center gap-2">
+                                        未来工具箱
+                                    </h1>
+                                    <div class="flex items-center gap-1 mt-1">
+                                        <div class="h-1 w-8 bg-zinc-300 rounded-full"></div>
+                                        <div class="h-1 w-2 bg-orange-400 rounded-full"></div>
+                                        <div class="h-1 w-2 bg-sky-400 rounded-full"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            ${backButton}
+                        </div>
+                    </div>
+                </header>
+
+                <main id="main-content" class="flex-1 w-full max-w-6xl mx-auto p-4 md:p-6 flex flex-col relative z-10">
+                    <!-- Page Content -->
+                </main>
+
+                <footer class="w-full py-10 text-center mt-auto relative z-10">
+                    <div class="inline-flex flex-col items-center gap-2">
+                        <div class="inline-flex items-center gap-4 px-6 py-2 bg-white/80 backdrop-blur rounded-full border border-zinc-200">
+                            <a href="https://github.com/Future-R" target="_blank" rel="noopener noreferrer"
+                            class="flex items-center gap-2 text-zinc-400 hover:text-zinc-800 transition-colors">
+                                <i data-lucide="github" class="w-4 h-4"></i>
+                                <span class="text-xs font-bold tracking-widest">Github 主页</span>
+                            </a>
+                        </div>
+                        <span class="text-[10px] text-zinc-400 font-bold tracking-widest">未来科技 © 2025</span>
+                    </div>
+                </footer>
+                `;
+            }
+        };
+
+        // --- DASHBOARD (Cassette Style) ---
+        window.App.pages.dashboard = {
+            render: function() {
+                const tools = [
+                    // Internal
+                    { id: 'counter', name: '手动计数器', desc: '精密计数模块', path: 'counter', icon: 'mouse-pointer-2', type: 'internal', labelColor: 'bg-[#ef4444]', iconColor: 'text-[#ef4444]' },
+                    { id: 'anime-namer', name: '二次元起名器', desc: '随机命名引擎', path: 'anime-namer', icon: 'sparkles', type: 'internal', labelColor: 'bg-[#f97316]', iconColor: 'text-[#f97316]' },
+                    { id: 'text-map', name: '文字地图编辑器', desc: '字符绘图终端', path: 'text-map', icon: 'map', type: 'internal', labelColor: 'bg-[#14b8a6]', iconColor: 'text-[#14b8a6]' },
+                    // External
+                    { id: 'diff-checker', name: '文本差异对比', desc: 'Diff Checker', path: 'https://www.diffchecker.com/zh-Hans/', icon: 'file-diff', type: 'external', labelColor: 'bg-[#3b82f6]', iconColor: 'text-[#3b82f6]' },
+                    { id: 'sauce-nao', name: '以图搜图', desc: 'SauceNAO', path: 'https://saucenao.com/', icon: 'image', type: 'external', labelColor: 'bg-[#6366f1]', iconColor: 'text-[#6366f1]' },
+                    { id: 'regex-online', name: '正则表达式', desc: 'Regex Online', path: 'https://www.jyshare.com/front-end/854/', icon: 'code', type: 'external', labelColor: 'bg-[#8b5cf6]', iconColor: 'text-[#8b5cf6]' }
+                ];
+
+                const renderCard = (tool) => {
+                    const isExt = tool.type === 'external';
+                    const onclick = isExt 
+                            ? `window.open('${tool.path}', '_blank', 'noopener,noreferrer')`
+                            : `window.App.Router.navigate('${tool.path}')`;
+                    
+                    return `
+                    <div onclick="${onclick}" class="cassette-card cursor-pointer group">
+                        <!-- Screws -->
+                        <div class="screw top-1.5 left-1.5"></div>
+                        <div class="screw top-1.5 right-1.5"></div>
+                        <div class="screw bottom-1.5 left-1.5"></div>
+                        <div class="screw bottom-1.5 right-1.5"></div>
+                        
+                        <!-- Main Label -->
+                        <div class="cassette-label ${tool.labelColor}">
+                            <div class="flex justify-between items-start">
+                                <h3 class="font-black text-lg leading-tight tracking-tight text-white">${tool.name}</h3>
+                                ${isExt ? '<i data-lucide="external-link" class="w-4 h-4 text-white/70"></i>' : ''}
+                            </div>
+                            <div class="text-[10px] font-bold text-white/80 mb-2">${tool.desc}</div>
+                            
+                            <!-- Window / Reels -->
+                            <div class="cassette-window">
+                                <i data-lucide="${tool.icon}" class="w-5 h-5 ${tool.iconColor}"></i>
+                            </div>
+                        </div>
+
+                        <!-- Bottom Tape Area -->
+                        <div class="cassette-bottom"></div>
+                    </div>
+                    `;
+                };
+
+                return `
+                <div class="flex flex-col gap-10 fade-in pb-12">
+                    <section>
+                        <div class="flex items-center gap-3 mb-6">
+                            <h2 class="text-lg font-black text-zinc-500 tracking-widest">核心模组</h2>
+                            <div class="h-[1px] flex-1 bg-zinc-300"></div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${tools.filter(t => t.type === 'internal').map(renderCard).join('')}
+                        </div>
+                    </section>
+                    <section>
+                        <div class="flex items-center gap-3 mb-6">
+                            <h2 class="text-lg font-black text-zinc-500 tracking-widest">外部链接</h2>
+                            <div class="h-[1px] flex-1 bg-zinc-300"></div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            ${tools.filter(t => t.type === 'external').map(renderCard).join('')}
+                        </div>
+                    </section>
+                </div>
+                `;
+            }
+        };
+
+        // --- COUNTER ---
+        window.App.pages.counter = {
+            count: 0,
+            render: function() {
+                this.count = 0;
+                return `
+                <div class="flex flex-col items-center justify-center flex-1 w-full fade-in py-10">
+                    <div class="streamline-shell w-full max-w-sm p-8 relative">
+                        <!-- VFD Screen -->
+                        <div class="mb-10 mx-auto w-full">
+                            <div class="device-screen p-6 text-center h-40 flex items-center justify-center relative">
+                                <div class="absolute top-2 left-4 text-[10px] font-bold text-zinc-600 tracking-widest uppercase">计数序列_01</div>
+                                <span id="counter-display" class="block text-8xl font-mono font-bold text-orange-500 tabular-nums leading-none drop-shadow-[0_0_10px_rgba(249,115,22,0.6)]">000</span>
+                            </div>
+                        </div>
+
+                        <!-- Main Button -->
+                        <div class="flex flex-col items-center gap-8 mb-4">
+                            <button id="btn-increment" class="active:scale-[0.98] transition-transform w-32 h-32 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 border-[6px] border-white shadow-[0_10px_20px_rgba(234,88,12,0.3),inset_0_2px_10px_rgba(255,255,255,0.4)] active:shadow-none active:translate-y-1 flex items-center justify-center group ring-4 ring-zinc-100">
+                                <i data-lucide="plus" class="w-12 h-12 text-white stroke-[4] drop-shadow-md"></i>
+                            </button>
+
+                            <button id="btn-reset" class="atom-btn px-8 py-3 bg-zinc-100 text-zinc-500 text-xs tracking-widest shadow-sm">
+                                系统重置
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-6">
+                           <div class="w-12 h-1 bg-zinc-200 mx-auto rounded-full mb-2"></div>
+                           <span class="text-[10px] text-zinc-300 font-bold tracking-[0.2em]">未来科技</span>
+                        </div>
+                    </div>
+                </div>
+                `;
+            },
+            mount: function() {
+                const display = document.getElementById('counter-display');
+                const btnInc = document.getElementById('btn-increment');
+                const btnReset = document.getElementById('btn-reset');
+                
+                const update = () => display.innerText = this.count.toString().padStart(3, '0');
+                
+                btnInc.addEventListener('click', () => {
+                    this.count++;
+                    update();
+                    if(navigator.vibrate) navigator.vibrate(10);
+                });
+                
+                btnReset.addEventListener('click', () => {
+                    this.count = 0;
+                    update();
+                });
+                if(window.lucide) window.lucide.createIcons();
+            }
+        };
+
+        // --- ANIME NAMER ---
+        window.App.pages.animeNamer = {
+            render: function() {
+                return `
+                <div class="flex flex-col items-center justify-center flex-1 w-full fade-in py-6">
+                    <div class="streamline-shell w-full max-w-lg p-8">
+                        <div class="flex items-center gap-3 mb-6 border-b border-zinc-200 pb-4">
+                            <div class="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white">
+                                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                            </div>
+                            <h2 class="text-lg font-black text-zinc-700 tracking-wider">二次元起名器</h2>
+                        </div>
+
+                        <div class="device-screen min-h-[160px] flex items-center justify-center mb-8 p-6 bg-[#1a0510]">
+                           <h2 id="name-display" class="relative z-10 text-4xl font-black text-center text-pink-400 break-all leading-relaxed drop-shadow-[0_0_8px_rgba(244,114,182,0.8)] tracking-wide">
+                             <span class="text-zinc-700 text-sm font-bold tracking-widest animate-pulse">等待指令...</span>
+                           </h2>
+                        </div>
+
+                        <div class="flex gap-4 w-full">
+                            <button id="btn-gen" class="flex-1 bg-zinc-800 text-white border-b-4 border-zinc-950 rounded-xl py-4 font-bold tracking-widest text-sm flex items-center justify-center gap-2 shadow-xl active:translate-y-1 active:border-b-0 transition-all hover:bg-zinc-700">
+                                <i data-lucide="shuffle" class="w-4 h-4 text-pink-400"></i>
+                                <span>启动生成</span>
+                            </button>
+                            
+                            <button id="btn-copy" class="atom-btn w-16 flex items-center justify-center hover:text-teal-600 bg-white">
+                                <i data-lucide="copy" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                `;
+            },
+            mount: function() {
+                const prefixes = ["少女", "旅人", "勇者", "魔神", "终焉", "灰烬", "空想", "弑神", "奥术", "虚空", "神授", "诸神", "灵子", "不灭", "湮灭", "超载", "奇迹", "共鸣", "嗜血", "灵魂", "灾厄", "究极", "超越", "光明", "混沌", "希望", "绝望", "灭亡", "无限", "无想", "悲鸣", "原初", "心象", "星屑", "白夜", "零点", "绝对", "幻想", "沉默", "熔解", "弥生", "水无", "千年", "暴走", "青枫", "浮世", "胧月", "红莲", "黄泉", "鬼杀", "妖怪", "人间", "伊甸", "银河", "破碎", "真理", "空想", "天命", "死亡", "爆裂", "异邦", "の未来"];
+                const suffixes = ["代码", "计划", "指令", "结界", "领域", "地带", "力量", "王冠", "次元", "风暴", "黎明", "地狱", "枷锁", "梦境", "轮回", "沙漏", "残响", "之花", "之魂", "之翼", "之心", "默示录", "序曲", "终章", "诗篇", "战车", "阳炎", "红炎", "失格", "宣告", "审判", "契约", "乐队", "杀手", "使徒", "统领", "纹章", "深渊", "鸟居", "特攻", "游戏", "英雄", "余晖", "纪元", "核心", "武装", "战争", "此端", "彼端", "纷争", "教会", "禁止", "转生", "三日月", "圆舞曲", "协奏曲", "奏鸣曲", "狂想曲", "华尔兹", "理想乡", "决战兵器"];
+
+                const btnGen = document.getElementById('btn-gen');
+                const btnCopy = document.getElementById('btn-copy');
+                const display = document.getElementById('name-display');
+                
+                const rnd = (max) => Math.floor(Math.random() * max);
+
+                const generateName = () => {
+                    const prefixIndex = rnd(prefixes.length);
+                    const suffixIndex = rnd(suffixes.length);
+                    
+                    let codeName = "";
+                    let story = "";
+
+                    const codeRoll = rnd(200);
+                    if (codeRoll < 5) codeName = "代号:";
+                    else if (codeRoll < 7) codeName = "Re:";
+                    else if (codeRoll === 8) codeName = "The ";
+                    else if (codeRoll === 9) codeName = "此乃";
+                    else if (codeRoll === 10) codeName = "其为";
+
+                    const storyRoll = rnd(200);
+                    if (storyRoll >= 11 && storyRoll <= 12) story = "物语";
+                    else if (storyRoll >= 13 && storyRoll <= 15) story = "传说";
+                    else if (storyRoll === 16) story = "与猫";
+                    else if (storyRoll === 17) story = "战线";
+                    else if (storyRoll === 18) story = "战纪";
+                    else if (storyRoll === 19) story = "英雄传";
+
+                    let extraPrefix = "";
+                    if (rnd(100) < 4) extraPrefix = prefixes[rnd(prefixes.length)];
+
+                    let star = "";
+                    if (rnd(100) < 4) star = "☆";
+
+                    const pText = prefixes[prefixIndex];
+                    const sText = suffixes[suffixIndex];
+
+                    // Inversion Logic (5%)
+                    if (rnd(100) < 5) {
+                         if (sText.startsWith("の") || sText.startsWith("之")) {
+                             return codeName + extraPrefix + sText.substring(1) + "の" + pText + story;
+                         }
+                         return codeName + extraPrefix + sText + star + pText + story;
+                    }
+
+                    // Normal Logic
+                    if (pText.startsWith("の") || pText.startsWith("之")) {
+                        return codeName + extraPrefix + pText.substring(1) + "の" + sText + story;
+                    }
+                    return codeName + extraPrefix + pText + star + sText + story;
+                };
+
+                let currentName = "";
+
+                btnGen.addEventListener('click', () => {
+                    // Start animation with simplified placeholder chars
+                    let i = 0;
+                    const interval = setInterval(() => {
+                        // Use some katakana/kanji as noise for anime feel, or just simple chars
+                        const noise = "未来幻想奇迹".split('');
+                        display.innerText = noise[Math.floor(Math.random() * noise.length)] + noise[Math.floor(Math.random() * noise.length)];
+                        i++;
+                        if(i > 8) {
+                            clearInterval(interval);
+                            currentName = generateName();
+                            display.innerText = currentName;
+                        }
+                    }, 50);
+                });
+
+                btnCopy.addEventListener('click', () => {
+                    if(currentName) navigator.clipboard.writeText(currentName);
+                });
+                if(window.lucide) window.lucide.createIcons();
+            }
+        };
+
+        // --- TEXT MAP EDITOR ---
+        window.App.pages.textMapEditor = {
+            rows: 10,
+            cols: 10,
+            MAX_SIZE: 40,
+            mapData: [],
+            fontFamily: "'MS Gothic', monospace",
+
+            initMap: function() {
+                if (this.mapData.length === 0) {
+                    this.mapData = Array(this.rows).fill('Ｘ'.repeat(this.cols));
+                }
+            },
+
+            render: function() {
+                this.initMap();
+                const specialChars = "① ② ③ ④ ⑤ ⑥ ⑦ ⑧ ⑨ ⑩ ♨ ✟ ※ ◎ □ ■ ♠ ♥ ♦ ♣ Ｘ";
+                const boxDrawingRows = ["┌┬┐┏┳┓╔╦╗╭─╮", "├┼┤┣╋┫╠╬╣│╳┃", "└┴┘┗┻┛╚╩╝╰━╯", "┍┑┎┒╒╕╓╖╱╲┄┅", "┕┙┖┚╘╛╙╜╲╱┆┇"];
+
+                return `
+                <div class="flex flex-col xl:flex-row gap-8 w-full fade-in items-start pb-20">
+                    <!-- LEFT PANEL (Editor) -->
+                    <div class="streamline-shell flex-1 w-full p-6 md:p-8 bg-white">
+                        
+                        <div class="flex flex-col xl:flex-row items-start xl:items-center justify-between mb-6 pb-6 border-b-2 border-zinc-100 gap-6">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white shadow-md border-2 border-white">
+                                    <i data-lucide="settings-2" class="w-5 h-5"></i>
+                                </div>
+                                <h2 class="font-black text-lg text-zinc-800 tracking-wider">地图参数</h2>
+                            </div>
+                            <div class="flex flex-wrap gap-3 w-full xl:w-auto">
+                                <button id="btn-open-import" class="atom-btn px-6 py-2 text-xs flex items-center gap-2 hover:text-teal-600 bg-white">
+                                    <i data-lucide="upload" class="w-4 h-4"></i> 导入
+                                </button>
+                                <button id="btn-copy-all" class="atom-btn px-6 py-2 text-xs flex items-center gap-2 hover:text-orange-600 bg-white">
+                                    <i data-lucide="clipboard-copy" class="w-4 h-4"></i> 复制全图
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Controls Row -->
+                        <div class="flex flex-col md:flex-row gap-6 mb-6">
+                            <!-- Size -->
+                            <div class="flex-1 bg-zinc-50 rounded-2xl p-4 border border-zinc-200">
+                                <label class="text-xs font-bold text-zinc-400 mb-2 block tracking-wider">尺寸 (最大 ${this.MAX_SIZE})</label>
+                                <div class="flex items-center gap-2">
+                                    <input id="input-rows" type="number" min="1" max="${this.MAX_SIZE}" value="${this.rows}" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 font-mono font-bold text-zinc-700 text-center focus:border-teal-500 outline-none">
+                                    <span class="text-zinc-300 font-bold">×</span>
+                                    <input id="input-cols" type="number" min="1" max="${this.MAX_SIZE}" value="${this.cols}" class="w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 font-mono font-bold text-zinc-700 text-center focus:border-teal-500 outline-none">
+                                </div>
+                            </div>
+                            <!-- Font Selector -->
+                            <div class="flex-1 bg-zinc-50 rounded-2xl p-4 border border-zinc-200">
+                                 <div class="flex justify-between items-center mb-2">
+                                    <label class="text-xs font-bold text-zinc-400 flex items-center gap-1 tracking-wider">
+                                      字体选择
+                                    </label>
+                                    <a href="https://gitgud.io/era-games-zh/meta/eraFonts" target="_blank" class="flex items-center gap-1 text-[10px] font-bold text-teal-600 hover:underline">
+                                      <i data-lucide="download" class="w-3 h-3"></i> 下载
+                                    </a>
+                                 </div>
+                                 <div class="relative">
+                                     <select id="select-font" class="appearance-none w-full bg-white border border-zinc-300 rounded-lg px-3 py-2 text-sm font-bold text-zinc-700 focus:border-teal-500 outline-none pr-8">
+                                       <option value="'MS Gothic', monospace">MS Gothic (era默认)</option>
+                                       <option value="'ERA MONO SC'">ERA MONO SC</option>
+                                       <option value="'EraPixel'">EraPixel</option>
+                                     </select>
+                                     <i data-lucide="chevron-down" class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none"></i>
+                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Editor Area (Black Screen) -->
+                        <div class="device-screen p-4 pb-8 min-h-[700px] flex flex-col bg-[#050505] border-[#3f3f46]">
+                            <div class="flex-1 overflow-auto rounded-lg border border-zinc-800 p-6 relative">
+                                <div class="absolute inset-0 bg-gradient-to-b from-teal-900/10 to-transparent pointer-events-none"></div>
+                                <div id="grid-container" class="flex flex-col gap-0 min-w-max pb-4 pr-4 relative z-10"></div>
+                            </div>
+                            <div class="text-center mt-3">
+                                <span class="text-[10px] font-bold text-teal-900 tracking-[0.3em]">终端显示</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT PANEL (Palette) -->
+                    <div class="streamline-shell w-full xl:w-80 p-6 bg-white sticky top-6 z-20">
+                         <div class="flex items-center gap-2 mb-6 pb-4 border-b border-zinc-100">
+                            <i data-lucide="layout-grid" class="w-5 h-5 text-orange-500"></i>
+                            <h2 class="font-black text-sm text-zinc-700 tracking-wider">字符工具箱</h2>
+                         </div>
+                        
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-[10px] font-black text-zinc-400 mb-3 tracking-widest">常用符号</h3>
+                                <div class="grid grid-cols-5 gap-2">
+                                     ${specialChars.split(' ').map(c => `<button onclick="navigator.clipboard.writeText('${c}')" class="aspect-square flex items-center justify-center bg-zinc-50 border border-zinc-200 rounded-lg hover:bg-orange-500 hover:border-orange-500 hover:text-white transition-all text-sm font-bold shadow-sm active:scale-95">${c}</button>`).join('')}
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-[10px] font-black text-zinc-400 mb-3 tracking-widest">制表符</h3>
+                                <div class="space-y-1 bg-zinc-50 p-3 rounded-xl border border-zinc-200">
+                                   ${boxDrawingRows.map(row => `
+                                     <div class="flex gap-1 justify-between">
+                                        ${row.split('').map(c => `<button onclick="navigator.clipboard.writeText('${c}')" class="flex-1 aspect-square flex items-center justify-center bg-white border border-zinc-200 rounded hover:bg-teal-500 hover:border-teal-500 hover:text-white transition-all text-base font-mono leading-none shadow-sm active:scale-90">${c}</button>`).join('')}
+                                     </div>
+                                   `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MODAL -->
+                    <div id="modal-import" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div class="bg-white rounded-[2rem] p-8 w-full max-w-2xl shadow-2xl border-4 border-white relative">
+                            <button id="btn-close-modal" class="absolute top-6 right-6 p-2 rounded-full bg-zinc-100 hover:bg-red-100 hover:text-red-500 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                            <h3 class="text-2xl font-black text-zinc-800 mb-2 tracking-tight">导入地图数据</h3>
+                            <textarea id="import-area" class="w-full h-64 bg-zinc-50 rounded-xl p-4 font-mono text-sm border-2 border-zinc-200 focus:border-teal-500 outline-none resize-none mb-6 leading-relaxed" placeholder="在此粘贴文本地图..."></textarea>
+                            <div class="flex justify-end gap-4">
+                                <button id="btn-cancel-import" class="px-6 py-2 rounded-full font-bold text-zinc-500 hover:bg-zinc-100 transition-colors">取消</button>
+                                <button id="btn-confirm-import" class="bg-zinc-800 text-white px-8 py-2 rounded-full font-bold hover:bg-zinc-700">确认导入</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                `;
+            },
+
+            mount: function() {
+                const gridContainer = document.getElementById('grid-container');
+                const inputRows = document.getElementById('input-rows');
+                const inputCols = document.getElementById('input-cols');
+                const selectFont = document.getElementById('select-font');
+                const btnCopyAll = document.getElementById('btn-copy-all');
+                const btnOpenImport = document.getElementById('btn-open-import');
+                const modalImport = document.getElementById('modal-import');
+                const btnCloseModal = document.getElementById('btn-close-modal');
+                const btnCancelImport = document.getElementById('btn-cancel-import');
+                const btnConfirmImport = document.getElementById('btn-confirm-import');
+                const importArea = document.getElementById('import-area');
+
+                const renderGrid = () => {
+                    gridContainer.innerHTML = this.mapData.map((row, i) => `
+                        <div class="flex items-center group relative" style="height: 1.5em">
+                           <div class="absolute -left-8 top-0 h-full flex items-center w-6 justify-end text-[12px] text-zinc-600 font-mono select-none">${i+1}</div>
+                           <input 
+                             type="text" 
+                             data-idx="${i}" 
+                             value="${row}" 
+                             style="font-family: ${this.fontFamily}; width: calc(${this.cols * 1.1}em + 4rem); height: 1.5em; line-height: 1.5; font-size: 1.5rem; letter-spacing: 0px;" 
+                             class="map-input block bg-transparent text-teal-50 border-none outline-none p-0 m-0 cursor-text selection:bg-teal-500/50" 
+                             spellcheck="false"
+                           />
+                           <button onclick="window.App.pages.textMapEditor.copyRow(${i})" class="ml-2 p-1.5 rounded-md transition-all duration-200 text-zinc-600 opacity-0 group-hover:opacity-100 hover:text-teal-400 hover:bg-zinc-800"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                        </div>
+                    `).join('');
+                    if(window.lucide) window.lucide.createIcons();
+                };
+
+                inputRows.addEventListener('change', (e) => this.updateSize(parseInt(e.target.value), this.cols));
+                inputCols.addEventListener('change', (e) => this.updateSize(this.rows, parseInt(e.target.value)));
+                
+                selectFont.addEventListener('change', (e) => {
+                    this.fontFamily = e.target.value;
+                    renderGrid();
+                });
+
+                gridContainer.addEventListener('input', (e) => {
+                    if (e.target.classList.contains('map-input')) {
+                        const idx = parseInt(e.target.dataset.idx);
+                        this.mapData[idx] = e.target.value;
+                    }
+                });
+
+                btnCopyAll.addEventListener('click', () => navigator.clipboard.writeText(this.mapData.join('\n')));
+
+                const toggleModal = (show) => modalImport.classList.toggle('hidden', !show);
+                btnOpenImport.addEventListener('click', () => toggleModal(true));
+                btnCloseModal.addEventListener('click', () => toggleModal(false));
+                btnCancelImport.addEventListener('click', () => toggleModal(false));
+                
+                btnConfirmImport.addEventListener('click', () => {
+                    const text = importArea.value;
+                    if(!text.trim()) return;
+                    
+                    const lines = text.split('\n');
+                    const newRows = Math.min(this.MAX_SIZE, lines.length);
+                    let maxLen = 0;
+                    lines.forEach(l => maxLen = Math.max(maxLen, l.length));
+                    const newCols = Math.min(this.MAX_SIZE, Math.max(1, maxLen));
+
+                    this.rows = newRows;
+                    this.cols = newCols;
+                    inputRows.value = newRows;
+                    inputCols.value = newCols;
+
+                    this.mapData = [];
+                    for(let i=0; i<newRows; i++) {
+                        let line = lines[i] || "";
+                        if (line.length > newCols) line = line.substring(0, newCols);
+                        if (line.length < newCols) line = line + 'Ｘ'.repeat(newCols - line.length);
+                        this.mapData.push(line);
+                    }
+                    renderGrid();
+                    importArea.value = '';
+                    toggleModal(false);
+                });
+
+                const checkFont = (font) => {
+                   if (document.fonts && document.fonts.check) return document.fonts.check(`12px ${font}`);
+                   return true; 
+                };
+                
+                setTimeout(() => {
+                    Array.from(selectFont.options).forEach(opt => {
+                         if (opt.value.includes('Gothic')) return;
+                         if (!checkFont(opt.value)) {
+                             opt.disabled = true;
+                             opt.innerText += " (未安装)";
+                             opt.style.color = "#d4d4d8";
+                         }
+                    });
+                }, 500);
+
+                renderGrid();
+            },
+
+            updateSize: function(newRows, newCols) {
+                newRows = Math.min(this.MAX_SIZE, Math.max(1, newRows));
+                newCols = Math.min(this.MAX_SIZE, Math.max(1, newCols));
+                this.rows = newRows;
+                this.cols = newCols;
+
+                if (newRows > this.mapData.length) {
+                    for(let i=this.mapData.length; i<newRows; i++) this.mapData.push('Ｘ'.repeat(newCols));
+                } else if (newRows < this.mapData.length) {
+                    this.mapData.splice(newRows);
+                }
+
+                this.mapData = this.mapData.map(row => {
+                    if (newCols > row.length) return row + 'Ｘ'.repeat(newCols - row.length);
+                    else if (newCols < row.length) return row.substring(0, newCols);
+                    return row;
+                });
+
+                const inputRows = document.getElementById('input-rows');
+                const inputCols = document.getElementById('input-cols');
+                if(inputRows) inputRows.value = newRows;
+                if(inputCols) inputCols.value = newCols;
+                
+                const grid = document.getElementById('grid-container');
+                if(grid) {
+                     grid.innerHTML = this.mapData.map((row, i) => `
+                        <div class="flex items-center group relative" style="height: 1.5em">
+                           <div class="absolute -left-8 top-0 h-full flex items-center w-6 justify-end text-[12px] text-zinc-600 font-mono select-none">${i+1}</div>
+                           <input type="text" data-idx="${i}" value="${row}" style="font-family: ${this.fontFamily}; width: calc(${this.cols * 1.1}em + 4rem); height: 1.5em; line-height: 1.5; font-size: 1.5rem; letter-spacing: 0px;" class="map-input block bg-transparent text-teal-50 border-none outline-none p-0 m-0 cursor-text selection:bg-teal-500/50" spellcheck="false" />
+                           <button onclick="window.App.pages.textMapEditor.copyRow(${i})" class="ml-2 p-1.5 rounded-md transition-all duration-200 text-zinc-600 opacity-0 group-hover:opacity-100 hover:text-teal-400 hover:bg-zinc-800"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                        </div>
+                    `).join('');
+                    if(window.lucide) window.lucide.createIcons();
+                }
+            },
+
+            copyRow: function(idx) {
+                if(this.mapData[idx]) navigator.clipboard.writeText(this.mapData[idx]);
+            }
+        };
+
+    </script>
+</body>
 </html>
