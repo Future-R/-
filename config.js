@@ -49,6 +49,17 @@ window.TOOLBOX_CONFIG = {
       "iconColor": "text-white"
     },
     {
+      "id": "card-game",
+      "name": "阿不然打牌啰2",
+      "desc": "那1在哪里？",
+      "path": "card-game",
+      "icon": "dog",
+      "type": "internal",
+      "dev": true,
+      "labelClass": "bg-[#dc2626]",
+      "iconColor": "text-white"
+    },
+    {
       "id": "jitter-text",
       "name": "不安抖动",
       "desc": "一生不安的动图",
