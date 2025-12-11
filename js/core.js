@@ -1,4 +1,5 @@
 
+
 // Initialize or extend window.App
 window.App = window.App || {};
 
@@ -45,6 +46,13 @@ window.App.init = async function() {
             window.App.activePage.handleKey(e);
         }
     });
+
+    // 5. Restore CRT State (Defaults to Enabled)
+    const crtEnabled = localStorage.getItem('crt_enabled');
+    // If explicitly 'false', turn it off. Otherwise (null or true), keep it on.
+    if (crtEnabled === 'false') {
+        document.body.classList.add('no-crt');
+    }
 };
 
 // --- ROUTER ---
@@ -54,7 +62,8 @@ window.App.Router = {
         'counter': 'counter',
         'anime-namer': 'animeNamer',
         'dice': 'diceRoller',
-        'text-map': 'textMapEditor'
+        'text-map': 'textMapEditor',
+        'jitter-text': 'jitterText'
     },
 
     init: function() {
@@ -73,6 +82,7 @@ window.App.Router = {
         // Render Layout
         if (window.App.Layout) {
             appContainer.innerHTML = window.App.Layout.render(cleanHash);
+            window.App.Layout.attachListeners();
         }
 
         const mainContent = document.getElementById('main-content');
@@ -104,6 +114,9 @@ window.App.Layout = {
     render: function(currentPath) {
         const isHome = currentPath === '' || currentPath === '/';
         const title = (window.App.config && window.App.config.name) ? window.App.config.name : "未来工具箱";
+        // Check if CRT is DISABLED (if class no-crt is present)
+        // If no-crt is present, isCrtOn is FALSE.
+        const isCrtOn = !document.body.classList.contains('no-crt');
         
         const backButton = !isHome ? `
             <button onclick="window.App.Router.navigate('')"
@@ -121,11 +134,11 @@ window.App.Layout = {
         return `
         <header class="w-full pt-6 px-4 pb-2 relative z-20">
             <div class="max-w-[90rem] mx-auto">
-                <div class="bg-gradient-to-r from-white to-zinc-50 rounded-[2.5rem] px-8 py-5 flex items-center justify-between shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-white ring-1 ring-zinc-100 relative overflow-hidden">
+                <div class="bg-gradient-to-r from-white to-zinc-50 rounded-[2.5rem] px-8 py-5 flex flex-col md:flex-row items-center justify-between shadow-[0_4px_10px_rgba(0,0,0,0.05)] border border-white ring-1 ring-zinc-100 relative overflow-hidden gap-4">
                     <!-- Streamline Stripe -->
-                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-16 bg-orange-500 rounded-r-full"></div>
+                    <div class="absolute left-0 top-1/2 -translate-y-1/2 w-3 h-16 bg-orange-500 rounded-r-full hidden md:block"></div>
                     
-                    <div class="flex items-center gap-5 cursor-pointer z-10 pl-6" onclick="window.App.Router.navigate('')">
+                    <div class="flex items-center gap-5 cursor-pointer z-10 md:pl-6" onclick="window.App.Router.navigate('')">
                         <div class="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-zinc-600 relative overflow-hidden">
                             <div class="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent"></div>
                             <i data-lucide="atom" class="w-6 h-6 animate-[spin_10s_linear_infinite]"></i>
@@ -142,7 +155,15 @@ window.App.Layout = {
                         </div>
                     </div>
 
-                    ${backButton}
+                    <div class="flex items-center gap-4">
+                         <!-- CRT Toggle -->
+                        <button id="btn-toggle-crt" class="flex items-center gap-2 px-4 py-2 rounded-full border border-zinc-200 bg-zinc-50 hover:bg-white transition-all active:scale-95 group">
+                            <div class="w-4 h-4 rounded-full border border-zinc-400 ${isCrtOn ? 'bg-green-500 shadow-[0_0_8px_#22c55e]' : 'bg-zinc-200'} transition-colors"></div>
+                            <span class="text-xs font-bold text-zinc-600 group-hover:text-zinc-900">CRT滤镜</span>
+                            <i data-lucide="scan-line" class="w-3 h-3 text-zinc-400"></i>
+                        </button>
+                        ${backButton}
+                    </div>
                 </div>
             </div>
         </header>
@@ -164,5 +185,35 @@ window.App.Layout = {
             </div>
         </footer>
         `;
+    },
+    
+    attachListeners: function() {
+        const btn = document.getElementById('btn-toggle-crt');
+        if (btn) {
+            btn.addEventListener('click', () => {
+                // If currently has no-crt, it means it was OFF. We remove it to turn ON.
+                // If currently doesn't have it, it was ON. We add it to turn OFF.
+                const isCurrentlyOff = document.body.classList.contains('no-crt');
+                
+                if (isCurrentlyOff) {
+                    document.body.classList.remove('no-crt');
+                    localStorage.setItem('crt_enabled', 'true');
+                } else {
+                    document.body.classList.add('no-crt');
+                    localStorage.setItem('crt_enabled', 'false');
+                }
+
+                // Update Button UI
+                const isOnNow = !document.body.classList.contains('no-crt');
+                const dot = btn.querySelector('div');
+                if (isOnNow) {
+                    dot.classList.remove('bg-zinc-200');
+                    dot.classList.add('bg-green-500', 'shadow-[0_0_8px_#22c55e]');
+                } else {
+                    dot.classList.add('bg-zinc-200');
+                    dot.classList.remove('bg-green-500', 'shadow-[0_0_8px_#22c55e]');
+                }
+            });
+        }
     }
 };

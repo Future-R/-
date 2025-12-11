@@ -1,6 +1,4 @@
-// 配置文件
-// 修改这里的 JSON 内容即可配置工具箱
-// 这是一个 JS 文件，为了能在本地直接运行 (file:// 协议)，我们不能使用 .json 文件
+
 
 window.TOOLBOX_CONFIG = {
   "name": "未来工具箱",
@@ -13,6 +11,7 @@ window.TOOLBOX_CONFIG = {
       "path": "counter",
       "icon": "mouse-pointer-2",
       "type": "internal",
+      "dev": false,
       "labelClass": "bg-[#F06E1E]",
       "iconColor": "text-white"
     },
@@ -23,6 +22,7 @@ window.TOOLBOX_CONFIG = {
       "path": "anime-namer",
       "icon": "sparkles",
       "type": "internal",
+      "dev": false,
       "labelClass": "bg-[#e03c8a]",
       "iconColor": "text-white"
     },
@@ -33,6 +33,7 @@ window.TOOLBOX_CONFIG = {
       "path": "dice",
       "icon": "box",
       "type": "internal",
+      "dev": false,
       "labelClass": "bg-[#6366F1]",
       "iconColor": "text-white"
     },
@@ -43,8 +44,20 @@ window.TOOLBOX_CONFIG = {
       "path": "text-map",
       "icon": "map",
       "type": "internal",
+      "dev": false,
       "labelClass": "bg-[#5f27cd]",
       "iconColor": "text-white"
+    },
+    {
+      "id": "jitter-text",
+      "name": "不安抖动",
+      "desc": "一生不安的动图",
+      "path": "jitter-text",
+      "icon": "vibrate",
+      "type": "internal",
+      "dev": true,
+      "labelClass": "bg-[#FF66CC]",
+      "iconColor": "text-zinc-800"
     },
     {
       "id": "diff-checker",
@@ -53,6 +66,7 @@ window.TOOLBOX_CONFIG = {
       "path": "https://www.diffchecker.com/zh-Hans/",
       "icon": "file-diff",
       "type": "external",
+      "dev": false,
       "labelClass": "bg-[#00C281]",
       "iconColor": "text-white"
     },
@@ -63,6 +77,7 @@ window.TOOLBOX_CONFIG = {
       "path": "https://saucenao.com/",
       "icon": "image",
       "type": "external",
+      "dev": false,
       "labelClass": "bg-[#383838]",
       "iconColor": "text-white"
     },
@@ -73,6 +88,7 @@ window.TOOLBOX_CONFIG = {
       "path": "https://www.jyshare.com/front-end/854/",
       "icon": "code",
       "type": "external",
+      "dev": false,
       "labelClass": "bg-[#4B5168]",
       "iconColor": "text-white"
     },
@@ -83,6 +99,7 @@ window.TOOLBOX_CONFIG = {
       "path": "https://www.msdmanuals.cn/home/symptoms",
       "icon": "stethoscope",
       "type": "external",
+      "dev": false,
       "labelClass": "bg-[#B12E32]",
       "iconColor": "text-white"
     },
@@ -93,6 +110,7 @@ window.TOOLBOX_CONFIG = {
       "path": "https://www.shidianguji.com/",
       "icon": "scroll",
       "type": "external",
+      "dev": false,
       "labelClass": "bg-[#e79460]",
       "iconColor": "text-zinc-800"
     }

@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -13,6 +14,8 @@
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- GIF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
     
     <!-- Config Loader -->
     <script src="config.js" onerror="console.warn('config.js failed to load.')"></script>
@@ -52,6 +55,7 @@
             padding: 10px;
             display: flex;
             flex-direction: column;
+            overflow: hidden; /* Ensure ribbons don't spill out */
         }
         
         .cassette-card:hover {
@@ -70,6 +74,7 @@
             background: #e4e4e7;
             position: absolute;
             box-shadow: inset 1px 1px 2px rgba(0,0,0,0.1);
+            z-index: 5;
         }
 
         /* Cassette Label Area */
@@ -202,6 +207,7 @@
             border-radius: 1rem;
             position: relative;
             overflow: hidden;
+            transition: all 0.3s ease;
         }
         
         /* Scanline effect overlay */
@@ -217,6 +223,28 @@
             z-index: 2;
             background-size: 100% 2px, 3px 100%;
             pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        /* --- CRT DISABLED STATE (Overrides) --- */
+        body.no-crt .device-screen {
+            box-shadow: none;
+            border-color: #e4e4e7;
+            background-color: #000000; /* Keep it dark for contrast, but flat */
+        }
+        body.no-crt .device-screen::after {
+            opacity: 0;
+        }
+        /* Disable text glows when CRT is off */
+        body.no-crt #counter-display,
+        body.no-crt .drop-shadow-\[0_0_8px_rgba\(244\,114\,182\,0\.8\)\] {
+            filter: none !important;
+            drop-shadow: none !important;
+            text-shadow: none !important;
+        }
+        /* Make Anime Namer text cleaner when off */
+        body.no-crt #name-display {
+            drop-shadow: none !important;
         }
 
         /* Streamline Shell */
@@ -384,6 +412,7 @@
     <script src="js/anime-namer.js" onerror="console.error('js/anime-namer.js failed to load')"></script>
     <script src="js/dice.js" onerror="console.error('js/dice.js failed to load')"></script>
     <script src="js/text-map.js" onerror="console.error('js/text-map.js failed to load')"></script>
+    <script src="js/jitter-text.js" onerror="console.error('js/jitter-text.js failed to load')"></script>
     
     <!-- INIT -->
     <script>

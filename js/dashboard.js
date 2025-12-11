@@ -1,4 +1,5 @@
 
+
 // --- DASHBOARD (City Pop Cassette Style) ---
 window.App = window.App || {};
 window.App.pages = window.App.pages || {};
@@ -14,8 +15,19 @@ window.App.pages.dashboard = {
                     ? `window.open('${tool.path}', '_blank', 'noopener,noreferrer')`
                     : `window.App.Router.navigate('${tool.path}')`;
             
+            // Dev Ribbon Logic
+            // Increased size, font-size, and border thickness
+            const devRibbon = tool.dev 
+                ? `<div class="absolute -right-16 top-8 bg-red-600 text-yellow-300 border-y-4 border-yellow-400 w-64 text-center py-2 rotate-45 z-20 shadow-xl pointer-events-none">
+                        <div class="text-xl font-black tracking-[0.15em] leading-none uppercase drop-shadow-md">开发原型</div>
+                   </div>`
+                : '';
+            
             return `
             <div onclick="${onclick}" class="cassette-card cursor-pointer group">
+                <!-- Dev Ribbon -->
+                ${devRibbon}
+
                 <!-- Deco Dots -->
                 <div class="deco-dot top-1.5 left-1.5"></div>
                 <div class="deco-dot top-1.5 right-1.5"></div>
