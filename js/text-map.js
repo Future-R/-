@@ -1,4 +1,5 @@
 
+
 // --- TEXT MAP EDITOR ---
 window.App = window.App || {};
 window.App.pages = window.App.pages || {};
@@ -77,7 +78,7 @@ window.App.pages.textMapEditor = {
                                     '┍','┑','┎','┒','╒','╕','╓','╖','╱','╲','┄','┅',
                                     '┕','┙','┖','┚','╘','╛','╙','╜','╲','╱','┆','┇',
                                     '①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','♨','✟',
-                                    '※','◎','□','■','♠','♥','♦','♣','↑','↓','←','→'].map(c => `<button class="btn-char w-full h-6 bg-white hover:bg-teal-500 hover:text-white font-mono text-xs flex items-center justify-center transition-colors">${c}</button>`).join('')}
+                                    '※','◎','□','■','♠','♥','♦','♣','↑','↓','←','→'].map(c => `<button class="btn-char w-full h-6 bg-white hover:bg-teal-500 hover:text-white font-mono text-lg leading-none flex items-center justify-center transition-colors">${c}</button>`).join('')}
                             </div>
                         </div>
                     </div>
@@ -146,6 +147,9 @@ window.App.pages.textMapEditor = {
 
         const renderGrid = () => {
             container.innerHTML = '';
+            // Detect if ERA MONO SC is selected
+            const isEraMono = this.config.font.includes('ERA MONO SC');
+
             mapData.forEach((rowText, idx) => {
                 const rowEl = document.createElement('div');
                 rowEl.className = "flex items-center gap-2 group w-full";
@@ -161,7 +165,13 @@ window.App.pages.textMapEditor = {
                 input.style.fontSize = "1.25rem";
                 input.style.lineHeight = "1.0";
                 input.style.letterSpacing = "0px";
+                
+                // Special handling for ERA MONO SC vertical alignment
+                if (isEraMono) {
+                    input.style.paddingTop = "3px";
+                }
                 input.style.height = "1.0em";
+
                 // Fixed Width Logic: 40 chars * 2em approx to ensure fit
                 input.style.width = "60rem"; 
                 input.style.minWidth = "100%";
