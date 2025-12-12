@@ -11,7 +11,7 @@ window.TOOLBOX_CONFIG = {
       "path": "counter",
       "icon": "mouse-pointer-2",
       "type": "internal",
-      "dev": false,
+      "ribbon": "",
       "labelClass": "bg-[#F06E1E]",
       "iconColor": "text-white"
     },
@@ -22,7 +22,7 @@ window.TOOLBOX_CONFIG = {
       "path": "anime-namer",
       "icon": "sparkles",
       "type": "internal",
-      "dev": false,
+      "ribbon": "",
       "labelClass": "bg-[#e03c8a]",
       "iconColor": "text-white"
     },
@@ -33,7 +33,7 @@ window.TOOLBOX_CONFIG = {
       "path": "dice",
       "icon": "box",
       "type": "internal",
-      "dev": false,
+      "ribbon": "",
       "labelClass": "bg-[#6366F1]",
       "iconColor": "text-white"
     },
@@ -44,19 +44,8 @@ window.TOOLBOX_CONFIG = {
       "path": "text-map",
       "icon": "map",
       "type": "internal",
-      "dev": false,
+      "ribbon": "",
       "labelClass": "bg-[#5f27cd]",
-      "iconColor": "text-white"
-    },
-    {
-      "id": "card-game",
-      "name": "阿不然打牌啰2",
-      "desc": "那1在哪里？",
-      "path": "card-game",
-      "icon": "dog",
-      "type": "internal",
-      "dev": true,
-      "labelClass": "bg-[#dc2626]",
       "iconColor": "text-white"
     },
     {
@@ -66,9 +55,20 @@ window.TOOLBOX_CONFIG = {
       "path": "jitter-text",
       "icon": "vibrate",
       "type": "internal",
-      "dev": true,
+      "ribbon": "",
       "labelClass": "bg-[#FF66CC]",
       "iconColor": "text-zinc-800"
+    },
+	{
+      "id": "card-game",
+      "name": "阿不然打牌啰2",
+      "desc": "那1在哪里？",
+      "path": "card-game",
+      "icon": "dog",
+      "type": "internal",
+      "ribbon": "抢先体验",
+      "labelClass": "bg-[#dc2626]",
+      "iconColor": "text-white"
     },
     {
       "id": "diff-checker",
@@ -77,7 +77,7 @@ window.TOOLBOX_CONFIG = {
       "path": "https://www.diffchecker.com/zh-Hans/",
       "icon": "file-diff",
       "type": "external",
-      "dev": false,
+      "ribbon": "",
       "labelClass": "bg-[#00C281]",
       "iconColor": "text-white"
     },
@@ -88,7 +88,7 @@ window.TOOLBOX_CONFIG = {
       "path": "https://saucenao.com/",
       "icon": "image",
       "type": "external",
-      "dev": false,
+      "ribbon": "",
       "labelClass": "bg-[#383838]",
       "iconColor": "text-white"
     },
@@ -99,7 +99,7 @@ window.TOOLBOX_CONFIG = {
       "path": "https://www.jyshare.com/front-end/854/",
       "icon": "code",
       "type": "external",
-      "dev": false,
+      "ribbon": "",
       "labelClass": "bg-[#4B5168]",
       "iconColor": "text-white"
     },
@@ -110,7 +110,7 @@ window.TOOLBOX_CONFIG = {
       "path": "https://www.msdmanuals.cn/home/symptoms",
       "icon": "stethoscope",
       "type": "external",
-      "dev": false,
+      "ribbon": "",
       "labelClass": "bg-[#B12E32]",
       "iconColor": "text-white"
     },
@@ -121,7 +121,7 @@ window.TOOLBOX_CONFIG = {
       "path": "https://www.shidianguji.com/",
       "icon": "scroll",
       "type": "external",
-      "dev": false,
+      "ribbon": "",
       "labelClass": "bg-[#e79460]",
       "iconColor": "text-zinc-800"
     }
