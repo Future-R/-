@@ -1,4 +1,5 @@
 
+
 // --- DICE ROLLER ---
 window.App = window.App || {};
 window.App.pages = window.App.pages || {};
@@ -16,20 +17,21 @@ window.App.pages.diceRoller = {
                     </div>
                     <h2 class="text-lg font-black text-zinc-700 tracking-wider">电子骰子</h2>
                 </div>
-                <div class="device-screen h-64 flex items-center justify-center mb-6 bg-[#0c0a20] relative">
-                        <div class="dice-scene">
-                        <div id="dice-cube" class="dice-cube">
-                            <div class="dice-face dice-face-front">?</div>
-                            <div class="dice-face dice-face-back">?</div>
-                            <div class="dice-face dice-face-right">?</div>
-                            <div class="dice-face dice-face-left">?</div>
-                            <div class="dice-face dice-face-top">?</div>
-                            <div class="dice-face dice-face-bottom">?</div>
+                <div id="dice-screen" class="device-screen h-64 flex items-center justify-center mb-6 bg-[#0c0a20] relative cursor-pointer hover:border-indigo-400 transition-colors">
+                        <div class="dice-scene pointer-events-none">
+                            <div id="dice-cube" class="dice-cube">
+                                <div class="dice-face dice-face-front">?</div>
+                                <div class="dice-face dice-face-back">?</div>
+                                <div class="dice-face dice-face-right">?</div>
+                                <div class="dice-face dice-face-left">?</div>
+                                <div class="dice-face dice-face-top">?</div>
+                                <div class="dice-face dice-face-bottom">?</div>
+                            </div>
                         </div>
-                        </div>
-                        <div id="dice-result-overlay" class="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden z-20">
+                        <div id="dice-result-overlay" class="absolute inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden z-20 pointer-events-none">
                         <span class="text-6xl font-black text-indigo-400 drop-shadow-[0_0_15px_rgba(129,140,248,0.8)]">20</span>
                         </div>
+                        <div class="absolute bottom-2 right-2 text-[10px] text-zinc-600 font-bold opacity-50">TOUCH SCREEN</div>
                 </div>
                 <div class="grid grid-cols-2 gap-4 mb-6">
                     <div>
@@ -62,11 +64,13 @@ window.App.pages.diceRoller = {
     mount: function() {
         const cube = document.getElementById('dice-cube');
         const btn = document.getElementById('btn-roll');
+        const screen = document.getElementById('dice-screen');
         const sidesSelect = document.getElementById('dice-sides');
         const countInput = document.getElementById('dice-count');
         const historyLog = document.getElementById('dice-history');
         const overlay = document.getElementById('dice-result-overlay');
-        btn.addEventListener('click', async () => {
+
+        const rollDice = async () => {
             if (this.rolling) return;
             this.rolling = true;
             overlay.classList.add('hidden');
@@ -87,7 +91,11 @@ window.App.pages.diceRoller = {
             if(this.history.length > 5) this.history.pop();
             historyLog.innerHTML = this.history.map(h => `<div class="text-xs font-mono text-zinc-600 border-b border-zinc-200 pb-1 last:border-0">${h}</div>`).join('');
             this.rolling = false;
-        });
+        };
+
+        btn.addEventListener('click', rollDice);
+        screen.addEventListener('click', rollDice);
+
         if(window.lucide) window.lucide.createIcons();
     }
 };
