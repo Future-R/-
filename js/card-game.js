@@ -34,8 +34,10 @@ Object.assign(window.App.pages.cardGame, {
         showLog: false,
         previewCard: null,
         hasPlayedInThisRound: false,
+        hintDismissed: false,
         playerAvatar: 'paw-print',
-        enemyData: null
+        enemyData: null,
+        rewardGroups: []
     },
 
     createCard: function(ownerId, color, number, skills = []) {
@@ -117,6 +119,7 @@ Object.assign(window.App.pages.cardGame, {
     initGame: function() {
         this.injectStyles();
         this.state.mode = 'intro';
+        this.state.hintDismissed = false;
         this.renderGame();
     },
 
@@ -153,7 +156,7 @@ Object.assign(window.App.pages.cardGame, {
         this.state.hasPlayedInThisRound = false;
         
         if (this.state.gameMode === 'classic') {
-            this.state.log = [{ text: `阿不然打牌啰 2：系统已启动。`, color: 'text-sky-400 font-bold' }];
+            this.state.log = [{ text: `阿不然打牌啰 2：系统初始化。`, color: 'text-sky-400 font-bold' }];
             this.state.decks = [this.initClassicDeck(0), this.initClassicDeck(1)];
             this.state.enemyData = { name: '镜像对手', icon: 'cat', color: 'text-rose-500', bg: 'bg-rose-100' };
         } else {
@@ -188,7 +191,7 @@ Object.assign(window.App.pages.cardGame, {
         for (let i = 0; i < count; i++) {
             if (this.state.decks[playerId].length === 0) {
                 if (this.state.discardPiles[playerId].length > 0) {
-                    if(playerId === 0) this.log("牌库已空，洗切弃牌堆。", "text-zinc-500 italic");
+                    if(playerId === 0) this.log("牌库已空，洗切弃牌堆。", "text-zinc-500");
                     this.state.decks[playerId] = [...this.state.discardPiles[playerId]];
                     this.state.discardPiles[playerId] = [];
                     this.state.decks[playerId].sort(() => Math.random() - 0.5);
@@ -296,7 +299,13 @@ Object.assign(window.App.pages.cardGame, {
     playCard: async function(playerId, cardIdx, fieldIdx) {
         if (this.state.isProcessing) return;
         this.state.isProcessing = true;
-        if (playerId === 0) this.state.hasPlayedInThisRound = true;
+        
+        // 我方出牌会消除长按提示
+        if (playerId === 0) {
+            this.state.hasPlayedInThisRound = true;
+            this.state.hintDismissed = true;
+        }
+        
         const hand = this.state.hands[playerId];
         const card = hand[cardIdx];
         if (playerId === 0) await this.animateElementExit(`card-${card.id}`);
@@ -319,14 +328,14 @@ Object.assign(window.App.pages.cardGame, {
         }
         if (this.hasSkill(card, 'copy') && stack.length > 0) {
             const last = stack[stack.length-1];
-            this.log(`${playerId===0?'我方':'对方'} [模仿] 复制了下方技能`);
+            this.log(`${playerId===0?'我方':'对方'} [模仿] 复制技能`);
             card.skills = [...last.skills];
         }
         if (this.hasSkill(card, 'discolor')) card.color = fieldIdx;
         stack.push(card);
         this.state.lastPlayedCard = { id: card.id, time: Date.now() };
         if (this.hasSkill(card, 'continue')) {
-            this.log(`[补给] 双方各补给 1 张手牌`);
+            this.log(`[补给] 双方各抽 1 张牌`);
             this.drawCards(0, 1); this.drawCards(1, 1);
             this.renderGame(); await new Promise(r => setTimeout(r, 400));
         }
@@ -335,7 +344,7 @@ Object.assign(window.App.pages.cardGame, {
             const myVal = this.getCardValue(card); const v1 = this.getCardValue(b1); const v2 = this.getCardValue(b2);
             const isRev = this.isGlobalReverse();
             const d1 = isRev ? (v1 - myVal) : (myVal - v1); const d2 = isRev ? (v2 - myVal) : (myVal - v2);
-            if (d1 === 1 && d2 === 2) { this.log(`[魅惑] 捕获了下方卡牌控制权`); b1.owner = playerId; b2.owner = playerId; }
+            if (d1 === 1 && d2 === 2) { this.log(`[魅惑] 捕获下方控制权`); b1.owner = playerId; b2.owner = playerId; }
         }
         this.renderGame();
         if (this.hasSkill(card, 'rush')) {
@@ -350,13 +359,17 @@ Object.assign(window.App.pages.cardGame, {
                 this.state.isProcessing = false; await this.playCard(playerId, move.i, move.f); return;
             }
         }
+        this.state.isProcessing = false;
         await this.checkTurnEnd();
     },
 
     executeDiscard: async function() {
         this.state.isProcessing = true;
         const indices = this.state.selectedCardIndices;
-        this.log(indices.length >= 2 ? `战术更替：弃置 ${indices.length} 张并重抽` : "弃置手牌");
+        this.log(indices.length >= 2 ? `战术更替：弃置 ${indices.length} 张并补牌` : "弃置手牌");
+        
+        if (indices.length >= 2) this.state.pendingDraw = 1;
+
         const sorted = [...indices].sort((a, b) => b - a);
         for (const idx of sorted) await this.animateElementExit(`card-${this.state.hands[0][idx].id}`);
         const discards = [];
@@ -372,7 +385,7 @@ Object.assign(window.App.pages.cardGame, {
              if (this.hasSkill(card, 'bounce')) this.state.effectQueue.push({ type: 'bounce', card: card, source: 0 });
         });
         if (hasHammer) {
-            this.log("[整备] 重置手牌");
+            this.log("[整备] 重洗手牌");
             const count = this.state.hands[0].length;
             const oldHand = this.state.hands[0].splice(0, count);
             oldHand.forEach(c => this.state.decks[0].push(c));
@@ -389,8 +402,14 @@ Object.assign(window.App.pages.cardGame, {
             this.log(`请指定 [${effect.type === 'boom' ? '爆裂' : '击退'}] 目标...`, "text-amber-500 animate-pulse");
             this.renderGame();
         } else {
-            if (this.state.pendingDraw > 0) { this.drawCards(0, 1); this.state.pendingDraw = 0; }
-            this.state.isProcessing = false; this.renderGame(); await this.checkTurnEnd(); 
+            if (this.state.pendingDraw > 0) { 
+                this.log("补充一张新的资源卡");
+                this.drawCards(0, 1); 
+                this.state.pendingDraw = 0; 
+            }
+            this.state.isProcessing = false; 
+            this.renderGame(); 
+            await this.checkTurnEnd(); 
         }
     },
 
@@ -399,16 +418,16 @@ Object.assign(window.App.pages.cardGame, {
         const { type, sourcePlayer } = this.state.awaitingTarget;
         const stack = this.state.fields[targetIdx];
         this.state.awaitingTarget = null;
-        if (stack.some(c => this.hasSkill(c, 'guard')) && type === 'boom') this.log(`[爆裂] 被目标区域的 [格挡] 抵消`);
+        if (stack.some(c => this.hasSkill(c, 'guard')) && type === 'boom') this.log(`[爆裂] 被 [格挡] 抵消`);
         else {
             if (type === 'boom' && stack.length > 0) {
-                this.log(`${sourcePlayer===0?'我方':'对方'} [爆裂] 净空了该区域`, "text-red-500");
+                this.log(`${sourcePlayer===0?'我方':'对方'} [爆裂] 净空区域`, "text-red-500");
                 const el = document.getElementById(`stack-container-${targetIdx}`);
                 if (el) Array.from(el.children).forEach(c => c.classList.add('animate-boom'));
                 await new Promise(r => setTimeout(r, 500));
                 stack.forEach(c => this.sendToDiscard(c, c.owner)); this.state.fields[targetIdx] = [];
             } else if (type === 'bounce' && stack.length > 0) {
-                this.log(`${sourcePlayer===0?'我方':'对方'} [击退] 使顶牌撤回牌库`);
+                this.log(`${sourcePlayer===0?'我方':'对方'} [击退] 顶牌撤回`);
                 const top = stack.pop();
                 const topEl = document.getElementById(`small-card-${top.id}`);
                 if (topEl) { topEl.classList.add('animate-bounce-up'); await new Promise(r => setTimeout(r, 450)); }
@@ -436,15 +455,18 @@ Object.assign(window.App.pages.cardGame, {
             await this.playCard(1, best.i, best.f);
         } else {
             const idx = 0;
-            await this.animateElementExit(`ai-card-${hand[idx].id}`, true);
-            this.sendToDiscard(hand.splice(idx, 1)[0], 1); this.log("对方 弃牌");
+            const card = hand[idx];
+            await this.animateElementExit(`ai-card-${card.id}`, true);
+            this.sendToDiscard(hand.splice(idx, 1)[0], 1); 
+            this.log("对方 弃牌并重整资源");
+            this.renderGame();
+            await new Promise(r => setTimeout(r, 400));
             await this.checkTurnEnd();
         }
     },
 
     checkTurnEnd: async function() {
-        // 重要：如果还有待处理的效果，先不要触发结算
-        if (this.state.effectQueue.length > 0 || this.state.awaitingTarget) return;
+        if (this.state.effectQueue.length > 0 || this.state.awaitingTarget || this.state.isProcessing) return;
 
         if (this.state.hands[0].length === 0 && this.state.hands[1].length === 0) { 
             await this.resolveRound(); 
@@ -453,11 +475,15 @@ Object.assign(window.App.pages.cardGame, {
         
         const next = 1 - this.state.turn;
         if (this.state.hands[next].length > 0) {
-            this.state.turn = next; this.state.isProcessing = false; this.renderGame();
+            this.state.turn = next; 
+            this.state.isProcessing = false; 
+            this.renderGame();
             if (this.state.turn === 1) this.aiTurn();
         } else {
             this.log(`${next===0?'我方':'对方'} 已无手牌，轮转。`);
-            this.state.isProcessing = false; this.renderGame();
+            this.state.turn = 1 - next;
+            this.state.isProcessing = false; 
+            this.renderGame();
             if (this.state.turn === 1) setTimeout(() => this.aiTurn(), 500);
         }
     },
@@ -497,7 +523,7 @@ Object.assign(window.App.pages.cardGame, {
     confirmRoundEnd: function() {
         const { totalP, totalA } = this.state.scoringState;
         if (totalP > totalA) this.state.ippon[0]++; else if (totalA > totalP) this.state.ippon[1]++;
-        if (this.state.ippon[0] >= this.CONST.WIN_IPPON) { this.log("夺取了对决优胜！"); this.handleBattleWin(); }
+        if (this.state.ippon[0] >= this.CONST.WIN_IPPON) { this.log("胜利！"); this.handleBattleWin(); }
         else if (this.state.ippon[1] >= this.CONST.WIN_IPPON) this.handleBattleLoss();
         else {
              for(let p=0; p<2; p++) { this.state.hands[p].forEach(c => this.sendToDiscard(c, p)); this.state.hands[p] = []; }
@@ -509,13 +535,63 @@ Object.assign(window.App.pages.cardGame, {
     },
 
     handleBattleWin: function() {
+        // 重置战斗临时牌库，并即时同步以便奖励阶段查看
+        this.state.decks[0] = [];
+        this.state.hands[0] = [];
+        this.state.discardPiles[0] = [];
+        
         if (this.state.gameMode === 'classic') { this.state.mode = 'map'; this.renderGame(); return; }
-        this.state.gold += 60; this.state.mode = 'reward'; this.renderGame();
+        
+        this.state.rewardGroups = [
+            this.generateRewardGroup(3),
+            this.generateRewardGroup(3),
+            this.generateRewardGroup(3)
+        ];
+        
+        this.state.gold += 60; 
+        this.state.mode = 'reward'; 
+        this.renderGame();
     },
 
-    handleBattleLoss: function() { alert("遗憾落败。"); this.initGame(); },
+    generateRewardGroup: function(count = 3) {
+        const group = [];
+        const skillKeys = Object.keys(this.CONST.SKILLS);
+        for(let i=0; i<count; i++) {
+            const c = Math.floor(Math.random() * 3);
+            const n = Math.floor(Math.random() * 7) + 1;
+            const skills = [];
+            if (Math.random() > 0.4) skills.push(skillKeys[Math.floor(Math.random() * skillKeys.length)]);
+            group.push(this.createCard(0, c, n, skills));
+        }
+        return group;
+    },
+
+    selectRewardGroup: function(idx) {
+        const group = this.state.rewardGroups[idx];
+        if (group) group.forEach(card => this.state.playerDeck.push(card));
+        this.log(`获得资源。`);
+        this.state.rewardGroups = [];
+        this.state.mode = 'map';
+        this.state.level++;
+        this.renderGame();
+    },
+
+    skipReward: function() {
+        this.log("跳过了奖励。");
+        this.state.rewardGroups = [];
+        this.state.mode = 'map';
+        this.state.level++;
+        this.renderGame();
+    },
+
+    handleBattleLoss: function() { alert("挑战失败。"); this.initGame(); },
     toggleLog: function() { this.state.showLog = !this.state.showLog; this.renderGame(); },
-    previewCard: function(card) { this.state.previewCard = card; this.renderGame(); },
+    previewCard: function(card) { 
+        if (this.state.awaitingTarget || this.state.selectedCardIndices.length > 0) return;
+        this.state.previewCard = card; 
+        this.state.hintDismissed = true; 
+        this.renderGame(); 
+    },
     closePreview: function() { this.state.previewCard = null; this.renderGame(); },
     viewPile: function(type, owner = 0) { this.state.pileViewMode = { type: type, owner: owner }; this.renderGame(); },
     closeModal: function() { this.state.pileViewMode = null; this.state.discardConfirmOpen = false; this.state.trainingPending = null; this.state.previewCard = null; this.renderGame(); },
@@ -555,7 +631,7 @@ Object.assign(window.App.pages.cardGame, {
             if (newVal < 0) newVal = 0; if (newVal > 8) newVal = 8;
             c.number = newVal;
         });
-        this.log(`[特训] 结束：相邻卡牌点数已调整。`);
+        this.log(`[特训] 结束。`);
     },
     selectCard: function(idx) {
         if (this.state.isProcessing) return;
