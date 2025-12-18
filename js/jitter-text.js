@@ -1,5 +1,4 @@
 
-
 // --- JITTER TEXT GENERATOR ---
 window.App = window.App || {};
 window.App.pages = window.App.pages || {};
@@ -101,13 +100,13 @@ window.App.pages.jitterText = {
                             <!-- Loading Overlay inside CRT -->
                             <div id="loading-overlay" class="absolute inset-0 bg-black/90 z-20 hidden flex flex-col items-center justify-center">
                                 <div class="w-12 h-12 border-4 border-green-900 border-t-green-500 rounded-full animate-spin mb-4"></div>
-                                <span class="text-xs font-bold text-green-500 tracking-widest animate-pulse font-mono">RENDERING_GIF...</span>
+                                <span class="text-xs font-bold text-green-500 tracking-widest animate-pulse font-mono">正在生成中...</span>
                             </div>
                         </div>
                         
                         <div class="mt-4 flex items-center gap-2">
                              <div class="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_#22c55e]"></div>
-                             <span class="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">CRT PREVIEW ACTIVE</span>
+                             <span class="text-[10px] font-bold text-zinc-400 tracking-widest uppercase">预览画面激活</span>
                         </div>
                         <div class="text-[10px] text-zinc-400 mt-1">
                             画布尺寸将随文字自动调整
