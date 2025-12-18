@@ -1,145 +1,187 @@
 
 
-// --- CARD GAME (SOLO) ---
+// --- CARD GAME CORE LOGIC ---
+// Requires: card-game-config.js, card-game-ui.js
+
 window.App = window.App || {};
 window.App.pages = window.App.pages || {};
+window.App.pages.cardGame = window.App.pages.cardGame || {};
 
-window.App.pages.cardGame = {
-    // Game Constants
-    CONST: {
-        // Changed Green (Emerald) to Yellow/Amber for accessibility
-        COLORS: { 0: 'bg-red-500', 1: 'bg-amber-400', 2: 'bg-sky-500' },
-        COLOR_BORDERS: { 0: 'border-red-500', 1: 'border-amber-400', 2: 'border-sky-500' },
-        COLOR_TEXT: { 0: 'text-red-500', 1: 'text-amber-500', 2: 'text-sky-500' },
-        COLOR_NAMES: { 0: '红', 1: '黄', 2: '蓝' },
-        // Skills Definition
-        SKILLS: {
-            'add1': { name: '+1', short: '1', desc: '结算时分数+1', type: 'score' },
-            'add2': { name: '+2', short: '2', desc: '结算时分数+2', type: 'score' },
-            'add3': { name: '+3', short: '3', desc: '结算时分数+3', type: 'score' },
-            'min': { name: '最小', short: '0', desc: '比点大小时视为 0', type: 'value' },
-            'max': { name: '最大', short: '8', desc: '比点大小时视为 8', type: 'value' },
-            'discolor': { name: '变色', short: '变', desc: '可打入任意颜色列。打出后变为该列颜色', type: 'play' },
-            'dye': { name: '染色', short: '染', desc: '可打入任意列。此牌在场时，该列视为此牌颜色', type: 'field' },
-            'bounce': { name: '回弹', short: '弹', desc: '弃置时：选择一个堆叠，将顶牌退回持有者牌库', type: 'discard_target' },
-            'boom': { name: '炸弹', short: '炸', desc: '弃置时：选择一个堆叠，破坏所有牌', type: 'discard_target' },
-            'handover': { name: '交接', short: '交', desc: '此牌在顶端时，己方出牌无视大小', type: 'field' },
-            'domineer': { name: '霸道', short: '霸', desc: '出牌时无视大小限制', type: 'play' },
-            'lock': { name: '锁定', short: '锁', desc: '此牌在顶端时，对手只能出同色牌', type: 'field' },
-            'replace': { name: '替换', short: '换', desc: '打出时破坏顶端牌。可对同点数打出', type: 'play' },
-            'double': { name: '翻倍', short: '翻', desc: '此牌在顶端时，己方此列分数 x2', type: 'score' },
-            'hammer': { name: '宝锤', short: '锤', desc: '弃置时：重洗手牌并抽取同数量', type: 'discard_self' },
-            'copy': { name: '复制', short: '复', desc: '打出时：此牌词条变为下方牌的词条', type: 'play' },
-            'guard': { name: '守护', short: '盾', desc: '此牌在场时，此列卡牌无法被破坏', type: 'field' },
-            'reverse': { name: '逆转', short: '逆', desc: '此牌在场时，全局比点规则颠倒(小吃大)', type: 'field' },
-        },
-        MAX_HAND: 6,
-        WIN_IPPON: 2,
-        MAX_REDRAW_TOKENS: 3
-    },
-
-    // Game State
+// Extend the object with Core Logic
+Object.assign(window.App.pages.cardGame, {
+    // Global App State
     state: {
-        started: false,
-        turn: 0, // 0: Player, 1: AI
-        ippon: [0, 0], // [Player, AI]
-        fields: [[], [], []], // 3 Stacks
+        mode: 'intro',
+        level: 1,
+        maxLevel: 10,
+        playerDeck: [], 
+        gold: 100, 
+        
+        // Battle State
+        turn: 0,
+        ippon: [0, 0],
+        fields: [[], [], []],
         hands: [[], []], 
-        decks: [[], []],
+        decks: [[], []], 
+        discardPiles: [[], []], 
+        
         log: [],
         selectedCardIndices: [],
-        redrawTokens: 3,
         isProcessing: false,
-        winner: null,
+        battleWinner: null,
+        
+        // Interaction State
         awaitingTarget: null, 
-        browsingStackIdx: -1,
-        effectQueue: [], // For sequential discard resolution
-        pendingDraw: 0, // Cards to draw after effects
+        effectQueue: [],
+        pendingDraw: 0,
+        lastPlayedCard: { id: null, time: 0 }, 
+        discardConfirmOpen: false,
+        trainingPending: null,
+        pileViewMode: null, // Now stores { type: 'draw'|'discard', owner: 0|1 }
+        scoringState: null, 
+
+        // Roguelite State
+        rewardGroups: [],
+        eventData: null,
+        
+        // Avatars
+        playerAvatar: 'paw-print',
+        enemyData: null
     },
 
-    // --- INITIALIZATION ---
+    // --- DECK HELPERS ---
+    createCard: function(ownerId, color, number, skills = []) {
+        return {
+            id: Math.random().toString(36).substr(2, 9),
+            owner: ownerId,
+            color: color,
+            originalColor: color,
+            number: number,
+            skills: skills,
+            drawnAt: 0 
+        };
+    },
 
-    initDeck: function(ownerId) {
+    initStarterDeck: function() {
+        const deck = [];
+        for (let c = 0; c < 3; c++) {
+            for (let n = 1; n <= 7; n++) {
+                deck.push(this.createCard(0, c, n, []));
+            }
+        }
+        return deck;
+    },
+
+    generateAiDeck: function(level) {
         const deck = [];
         const skillKeys = Object.keys(this.CONST.SKILLS);
+        const cardCount = 18 + level * 2; 
         
-        for (let i = 0; i < 24; i++) {
+        for (let i = 0; i < cardCount; i++) {
             const color = Math.floor(Math.random() * 3);
-            const number = Math.floor(Math.random() * 7) + 1; // 1-7
+            const number = Math.floor(Math.random() * 8) + 1; 
+            const skillChance = 0.15 + (level * 0.08); 
+            const skills = [];
             
-            const numSkills = Math.random() < 0.6 ? 1 : (Math.random() < 0.8 ? 2 : (Math.random() < 0.95 ? 0 : 3));
-            const cardSkills = [];
-            const pool = [...skillKeys];
-            
-            for (let k = 0; k < numSkills; k++) {
-                if (pool.length === 0) break;
-                const r = Math.floor(Math.random() * pool.length);
-                cardSkills.push(pool[r]);
-                pool.splice(r, 1);
+            if (Math.random() < skillChance) {
+                const s1 = skillKeys[Math.floor(Math.random() * skillKeys.length)];
+                skills.push(s1);
+                if (level > 3 && Math.random() < 0.3) {
+                     const s2 = skillKeys[Math.floor(Math.random() * skillKeys.length)];
+                     skills.push(s2);
+                }
             }
-
-            deck.push({
-                id: Math.random().toString(36).substr(2, 9),
-                owner: ownerId,
-                color: color,
-                originalColor: color,
-                number: number,
-                skills: cardSkills,
-                drawnAt: 0 
-            });
+            deck.push(this.createCard(1, color, number, skills));
         }
         return deck.sort(() => Math.random() - 0.5);
     },
 
-    initGame: function() {
-        if (!document.getElementById('card-game-styles')) {
-            const style = document.createElement('style');
-            style.id = 'card-game-styles';
-            style.innerHTML = `
-                @keyframes drawCard { 
-                    0% { transform: translateY(60px) scale(0.8); opacity: 0; } 
-                    100% { transform: translateY(0) scale(1); opacity: 1; } 
+    generateRewardGroups: function() {
+        const groups = [];
+        const skillKeys = Object.keys(this.CONST.SKILLS);
+        for (let g = 0; g < 3; g++) {
+            const group = [];
+            for (let c = 0; c < 3; c++) {
+                const color = Math.floor(Math.random() * 3);
+                let number = Math.floor(Math.random() * 6) + 3; 
+                if (Math.random() < 0.2) number = Math.floor(Math.random() * 3) + 1;
+                
+                const numSkills = Math.random() < 0.3 ? 1 : (Math.random() < 0.8 ? 2 : 1);
+                const skills = [];
+                const pool = [...skillKeys];
+                for (let k = 0; k < numSkills; k++) {
+                    if(pool.length===0) break;
+                    const r = Math.floor(Math.random() * pool.length);
+                    skills.push(pool[r]);
+                    pool.splice(r,1);
                 }
-                .animate-draw { animation: drawCard 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-            `;
-            document.head.appendChild(style);
+                group.push(this.createCard(0, color, number, skills));
+            }
+            groups.push(group);
         }
-
-        try {
-            this.state.started = true;
-            this.state.ippon = [0, 0];
-            this.state.winner = null;
-            this.state.redrawTokens = this.CONST.MAX_REDRAW_TOKENS;
-            this.state.log = ["游戏开始！"];
-            this.state.effectQueue = [];
-            this.state.pendingDraw = 0;
-            this.startRound();
-        } catch (e) {
-            console.error("Init Game Error:", e);
-            alert("游戏初始化失败，请查看控制台。");
-        }
+        return groups;
     },
 
-    startRound: function() {
-        this.state.turn = 0;
-        this.state.fields = [[], [], []];
-        this.state.decks = [this.initDeck(0), this.initDeck(1)];
-        this.state.hands = [[], []];
-        this.drawCards(0, 7);
-        this.drawCards(1, 7);
-        this.state.isProcessing = false;
-        this.state.selectedCardIndices = [];
-        this.state.awaitingTarget = null;
-        this.state.browsingStackIdx = -1;
-        this.state.effectQueue = [];
-        this.state.pendingDraw = 0;
-        this.log("回合开始。");
+    // --- GAME CONTROL ---
+    initGame: function() {
+        this.injectStyles();
+        this.state.playerDeck = this.initStarterDeck();
+        this.state.level = 1;
+        this.state.gold = 100;
+        this.state.mode = 'intro';
         this.renderGame();
     },
 
+    startRun: function() {
+        this.state.mode = 'map';
+        this.renderGame();
+    },
+
+    enterBattle: function() {
+        this.state.mode = 'battle';
+        this.state.turn = 0;
+        this.state.ippon = [0, 0];
+        this.state.fields = [[], [], []];
+        this.state.log = [{ text: `Lv.${this.state.level} 遭遇战开始！`, color: 'text-zinc-400' }];
+        
+        // Clone decks for battle
+        this.state.decks = [
+            JSON.parse(JSON.stringify(this.state.playerDeck)).map(c => ({...c, owner: 0})).sort(() => Math.random() - 0.5),
+            this.generateAiDeck(this.state.level)
+        ];
+        this.state.discardPiles = [[], []];
+        this.state.hands = [[], []];
+        this.state.effectQueue = [];
+        this.state.pendingDraw = 0;
+        this.state.isProcessing = false;
+        this.state.pileViewMode = null;
+        this.state.scoringState = null;
+        
+        // Enemy Setup
+        const enemyIdx = (this.state.level - 1) % this.CONST.ENEMIES.length;
+        this.state.enemyData = this.CONST.ENEMIES[enemyIdx];
+
+        this.drawCards(0, 5); 
+        this.drawCards(1, 5);
+        
+        this.renderGame();
+    },
+
+    // --- BATTLE LOGIC ---
     drawCards: function(playerId, count) {
         const now = Date.now();
         for (let i = 0; i < count; i++) {
+            if (this.state.decks[playerId].length === 0) {
+                if (this.state.discardPiles[playerId].length > 0) {
+                    if(playerId === 0) this.log("抽牌堆耗尽，洗切弃牌堆...", "text-zinc-500 italic");
+                    this.state.decks[playerId] = [...this.state.discardPiles[playerId]];
+                    this.state.discardPiles[playerId] = [];
+                    this.state.decks[playerId].sort(() => Math.random() - 0.5);
+                } else {
+                    break;
+                }
+            }
+            
             if (this.state.decks[playerId].length > 0) {
                 const card = this.state.decks[playerId].pop();
                 card.drawnAt = now + (i * 100);
@@ -148,8 +190,11 @@ window.App.pages.cardGame = {
         }
     },
 
-    // --- LOGIC HELPERS ---
-
+    sendToDiscard: function(card, playerId) {
+        card.color = card.originalColor; 
+        this.state.discardPiles[playerId].push(card);
+    },
+    
     getStackColor: function(fieldIdx) {
         const stack = this.state.fields[fieldIdx];
         if (!stack) return fieldIdx;
@@ -160,114 +205,66 @@ window.App.pages.cardGame = {
         }
         return fieldIdx;
     },
-
     isGlobalReverse: function() {
         let count = 0;
-        this.state.fields.forEach(stack => {
-            stack.forEach(c => {
-                if (this.hasSkill(c, 'reverse')) count++;
-            });
-        });
+        this.state.fields.forEach(stack => { stack.forEach(c => { if (this.hasSkill(c, 'reverse')) count++; }); });
         return count % 2 !== 0;
     },
-
     getCardValue: function(card) {
         if (!card) return 0;
         if (card.skills.includes('min')) return 0;
         if (card.skills.includes('max')) return 8;
         return card.number;
     },
-
     hasSkill: function(card, skillName) {
         return card && card.skills && card.skills.includes(skillName);
     },
-
     canPlay: function(card, fieldIdx) {
         if (!card) return false;
         const stack = this.state.fields[fieldIdx];
         const top = stack.length > 0 ? stack[stack.length - 1] : null;
         const stackColor = this.getStackColor(fieldIdx);
         const isReversed = this.isGlobalReverse();
-
         const isWild = this.hasSkill(card, 'discolor') || this.hasSkill(card, 'dye');
 
-        // 1. GLOBAL Lock Check (Highest Priority)
-        // Scan ALL fields to see if any field has a Lock belonging to the OPPONENT of the current turn player.
-        // If it's my turn, check if Opponent has any Locks. If so, I am restricted.
         let lockedColors = [];
         this.state.fields.forEach(s => {
             const t = s.length > 0 ? s[s.length - 1] : null;
-            // Condition: Top card exists AND Owner is NOT current turn player AND Top has Lock
-            if (t && t.owner !== this.state.turn && this.hasSkill(t, 'lock')) {
-                lockedColors.push(t.color);
-            }
+            if (t && t.owner !== this.state.turn && this.hasSkill(t, 'lock')) lockedColors.push(t.color);
         });
+        if (lockedColors.length > 0) { if (!lockedColors.includes(card.color)) return false; }
 
-        // If there are any active locks from the opponent, I MUST match one of them (or use Wild)
-        if (lockedColors.length > 0) {
-            if (!isWild && !lockedColors.includes(card.color)) {
-                return false;
-            }
-        }
-
-        // 2. Normal Zone Color Check
-        // You can only play Red in Red zone, etc.
-        if (card.color !== stackColor && !isWild) {
-            return false;
-        }
-
-        // 3. Value Check
+        if (card.color !== stackColor && !isWild) return false;
         if (!top) return true;
-        
         if (top.owner === this.state.turn && this.hasSkill(top, 'handover')) return true;
         if (this.hasSkill(card, 'domineer')) return true;
 
         const myVal = this.getCardValue(card);
         const topVal = this.getCardValue(top);
-
         if (this.hasSkill(card, 'replace')) {
              if (isReversed) return myVal <= topVal;
              return myVal >= topVal;
         }
-
-        if (isReversed) {
-            return myVal < topVal;
-        }
+        if (isReversed) return myVal < topVal;
         return myVal > topVal;
     },
 
-    // --- INTERACTIONS ---
-
+    // --- ACTIONS ---
     handleStackClick: async function(fieldIdx) {
-        // Priority 1: Awaiting Target (Discard Effects)
-        if (this.state.awaitingTarget) {
-            await this.resolveDiscardEffect(fieldIdx);
-            return;
-        }
-
-        // Priority 2: Playing a Card
-        // Only if NOT processing AND Player Turn AND Card Selected
+        if (this.state.mode !== 'battle') return;
+        if (this.state.awaitingTarget) { await this.resolveDiscardEffect(fieldIdx); return; }
+        
         if (!this.state.isProcessing && this.state.turn === 0 && this.state.selectedCardIndices.length === 1) {
             const cardIdx = this.state.selectedCardIndices[0];
             const card = this.state.hands[0][cardIdx];
             if (this.canPlay(card, fieldIdx)) {
+                if (this.hasSkill(card, 'train')) {
+                    this.state.trainingPending = { type: 'play', indices: [cardIdx], targetField: fieldIdx };
+                    this.renderGame();
+                    return;
+                }
                 this.playCard(0, cardIdx, fieldIdx);
-                return;
             }
-        }
-        
-        // Priority 3: Browse (Always Allowed)
-        this.openStackBrowser(fieldIdx);
-    },
-
-    animateCardExit: async function(cardId) {
-        const el = document.getElementById(`card-${cardId}`);
-        if(el) {
-            el.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-            el.style.transform = 'translateY(-100px) scale(0.8) rotate(5deg)';
-            el.style.opacity = '0';
-            // Wait for animation to finish
-            await new Promise(r => setTimeout(r, 250));
         }
     },
 
@@ -278,10 +275,8 @@ window.App.pages.cardGame = {
         const hand = this.state.hands[playerId];
         const card = hand[cardIdx];
 
-        // Animate Player Exit
-        if (playerId === 0) {
-            await this.animateCardExit(card.id);
-        }
+        if (playerId === 0) await this.animateElementExit(`card-${card.id}`);
+        else await this.animateElementExit(`ai-card-${card.id}`, true);
 
         hand.splice(cardIdx, 1);
         this.state.selectedCardIndices = [];
@@ -289,159 +284,214 @@ window.App.pages.cardGame = {
         const stack = this.state.fields[fieldIdx];
         const top = stack.length > 0 ? stack[stack.length - 1] : null;
 
-        // Check Replace
         if (this.hasSkill(card, 'replace') && top) {
              if (this.hasSkill(top, 'guard')) {
-                 this.log(`${playerId===0?'我方':'敌方'} [替换] 失败，目标有 [守护]`);
+                 this.log(`${playerId===0?'我方':'敌方'} [背刺] 失败，目标有 [格挡]`);
              } else {
-                 this.log(`${playerId===0?'我方':'敌方'} [替换] 破坏了顶牌`);
-                 stack.pop();
+                 this.log(`${playerId===0?'我方':'敌方'} [背刺] 破坏了顶牌`);
+                 const topCardEl = document.getElementById(`small-card-${top.id}`);
+                 if (topCardEl) {
+                     topCardEl.classList.add('animate-boom');
+                     await new Promise(r => setTimeout(r, 400));
+                 }
+                 const destroyed = stack.pop();
+                 this.sendToDiscard(destroyed, destroyed.owner);
              }
         }
 
         const currentTop = stack.length > 0 ? stack[stack.length - 1] : null;
         if (this.hasSkill(card, 'copy') && currentTop) {
-            this.log(`${playerId===0?'我方':'敌方'} [复制] 覆盖了词条`);
+            this.log(`${playerId===0?'我方':'敌方'} [模仿] 复制了词条`);
             card.skills = [...currentTop.skills];
         }
 
-        if (this.hasSkill(card, 'discolor')) {
-            card.color = fieldIdx;
-        }
+        if (this.hasSkill(card, 'discolor')) card.color = fieldIdx;
 
         stack.push(card);
+        this.state.lastPlayedCard = { id: card.id, time: Date.now() };
+
+        // FIX: Clear lastPlayedCard after animation time (600ms) to prevent re-triggering on future renders (e.g. selection)
+        setTimeout(() => {
+            if (this.state.lastPlayedCard.id === card.id) {
+                this.state.lastPlayedCard = { id: null, time: 0 };
+            }
+        }, 600);
+        
+        if (this.hasSkill(card, 'continue')) {
+            this.log(`[补给] 发动: 双方抽1`);
+            this.drawCards(0, 1);
+            this.drawCards(1, 1);
+            this.renderGame(); 
+            await new Promise(r => setTimeout(r, 500));
+        }
+
+        if (this.hasSkill(card, 'control') && stack.length >= 3) {
+            const below1 = stack[stack.length - 2];
+            const below2 = stack[stack.length - 3];
+            const myVal = this.getCardValue(card);
+            const v1 = this.getCardValue(below1);
+            const v2 = this.getCardValue(below2);
+            const isReverse = this.isGlobalReverse();
+            const diff1 = isReverse ? (v1 - myVal) : (myVal - v1);
+            const diff2 = isReverse ? (v2 - myVal) : (myVal - v2);
+            if (diff1 === 1 && diff2 === 2) {
+                this.log(`[魅惑] 发动: 夺取控制权`);
+                below1.owner = playerId;
+                below2.owner = playerId;
+                const el1 = document.getElementById(`small-card-${below1.id}`);
+                const el2 = document.getElementById(`small-card-${below2.id}`);
+                if(el1) el1.classList.add('animate-pulse');
+                if(el2) el2.classList.add('animate-pulse');
+            }
+        }
+        
         this.renderGame();
+
+        if (this.hasSkill(card, 'rush')) {
+            await new Promise(r => setTimeout(r, 500));
+            const validIndices = [];
+            for(let i=0; i<hand.length; i++) {
+                let can = false;
+                for(let f=0; f<3; f++) if (this.canPlay(hand[i], f)) { can = true; break; }
+                if(can) validIndices.push(i);
+            }
+            if (validIndices.length > 0) {
+                this.log(`[连斩] 触发！`);
+                const rndIdx = validIndices[Math.floor(Math.random() * validIndices.length)];
+                const validFields = [];
+                const c = hand[rndIdx];
+                for(let f=0; f<3; f++) if (this.canPlay(c, f)) validFields.push(f);
+                if (validFields.length > 0) {
+                    const targetF = validFields[Math.floor(Math.random() * validFields.length)];
+                    if (this.hasSkill(c, 'train')) this.applyTraining(playerId, rndIdx, 1); 
+                    this.state.isProcessing = false; 
+                    await this.playCard(playerId, rndIdx, targetF);
+                    return; 
+                }
+            }
+        }
         await this.checkTurnEnd();
     },
 
-    // --- DISCARD & REDRAW SYSTEM ---
-
-    handleDiscardAction: async function() {
-        if (this.state.turn !== 0 || this.state.isProcessing) return;
-        const indices = this.state.selectedCardIndices;
-        if (indices.length === 0) return;
-        
+    executeDiscard: async function() {
         this.state.isProcessing = true;
         this.state.effectQueue = [];
         this.state.pendingDraw = 0;
-
-        let isRedraw = false;
+        const indices = this.state.selectedCardIndices;
         
-        if (indices.length >= 2 && this.state.redrawTokens > 0) {
-            this.state.redrawTokens--;
-            isRedraw = true;
-            this.log(`战术重组: 弃${indices.length}抽1`);
+        if (indices.length >= 2) {
+            this.log(`战术弃牌: 弃${indices.length}抽1`);
             this.state.pendingDraw = 1;
-        } else {
-             this.log(indices.length > 1 ? "批量弃牌" : "弃牌");
-        }
+        } else { this.log("弃牌"); }
 
-        // Animate Discards
         const sorted = [...indices].sort((a, b) => b - a);
-        const animations = sorted.map(idx => {
-             const card = this.state.hands[0][idx];
-             return this.animateCardExit(card.id);
-        });
+        const animations = sorted.map(idx => this.animateElementExit(`card-${this.state.hands[0][idx].id}`));
         await Promise.all(animations);
 
-        // Process Logic
         const cardsToDiscard = [];
         sorted.forEach(idx => {
-            cardsToDiscard.push(this.state.hands[0][idx]);
+            const c = this.state.hands[0][idx];
+            cardsToDiscard.push(c);
+            this.sendToDiscard(c, 0); 
             this.state.hands[0].splice(idx, 1);
         });
-        
         this.state.selectedCardIndices = [];
         this.renderGame(); 
 
-        // Build Effect Queue
         let hasHammer = false;
         cardsToDiscard.forEach(card => {
              if (this.hasSkill(card, 'hammer')) hasHammer = true;
              if (this.hasSkill(card, 'boom')) this.state.effectQueue.push({ type: 'boom', card: card, source: 0 });
              if (this.hasSkill(card, 'bounce')) this.state.effectQueue.push({ type: 'bounce', card: card, source: 0 });
         });
-
         if (hasHammer) {
-            this.log("发动 [宝锤]: 重洗手牌");
+            this.log("[整备] 生效: 手牌重洗");
             const count = this.state.hands[0].length;
             const oldHand = this.state.hands[0].splice(0, count);
             oldHand.forEach(c => this.state.decks[0].push(c));
             this.state.decks[0].sort(() => Math.random() - 0.5);
             this.drawCards(0, count);
         }
-
+        
         await this.processNextEffect();
     },
 
     processNextEffect: async function() {
         if (this.state.effectQueue.length > 0) {
             const effect = this.state.effectQueue.shift();
-            this.state.awaitingTarget = {
-                type: effect.type,
-                sourcePlayer: effect.source,
-                cardData: effect.card
-            };
-            this.log(`请为 [${effect.type === 'boom' ? '炸弹' : '回弹'}] 选择目标...`, "text-amber-500 animate-pulse");
-            this.state.isProcessing = false; 
+            this.state.awaitingTarget = { type: effect.type, sourcePlayer: effect.source, cardData: effect.card };
+            const effectName = effect.type === 'boom' ? '爆裂' : '击退';
+            this.log(`请选择 [${effectName}] 的目标...`, "text-amber-500 animate-pulse");
             this.renderGame();
         } else {
-            this.state.isProcessing = true;
             if (this.state.pendingDraw > 0) {
                 this.drawCards(0, this.state.pendingDraw);
                 this.state.pendingDraw = 0;
             }
-            this.checkTurnEnd();
+            this.state.isProcessing = false;
+            this.renderGame();
+            await this.checkTurnEnd(); 
         }
     },
 
     resolveDiscardEffect: async function(targetFieldIdx) {
         if (!this.state.awaitingTarget) return;
-
         this.state.isProcessing = true; 
+        
+        if (this.state.log && this.state.log.length > 0) {
+            this.state.log.forEach(l => {
+               if(l.text && l.text.includes('选择目标') && l.color.includes('animate-pulse')) l.color = l.color.replace('animate-pulse','');
+            });
+        }
 
         const { type, sourcePlayer } = this.state.awaitingTarget;
         const stack = this.state.fields[targetFieldIdx];
         this.state.awaitingTarget = null;
-
+        const stackEl = document.getElementById(`stack-container-${targetFieldIdx}`);
         const hasGuard = stack.some(c => this.hasSkill(c, 'guard'));
         
-        // Fix: Guard ONLY protects against BOOM. BOUNCE is allowed.
         if (hasGuard && type === 'boom') {
-             this.log(`[炸弹] 被 [守护] 抵挡！`);
+             this.log(`[爆裂] 被 [格挡] 抵挡！`);
         } else {
             if (type === 'boom') {
-                this.log(`${sourcePlayer===0?'我方':'敌方'} [炸弹] 炸毁了 ${this.CONST.COLOR_NAMES[targetFieldIdx]}区！`, "text-red-500");
-                this.state.fields[targetFieldIdx] = [];
+                if (stack.length > 0) {
+                    this.log(`${sourcePlayer===0?'我方':'敌方'} [爆裂] 炸毁了 ${this.CONST.COLOR_NAMES[targetFieldIdx]}区！`, "text-red-500");
+                    if (stackEl) Array.from(stackEl.children).forEach(child => child.classList.add('animate-boom'));
+                    await new Promise(r => setTimeout(r, 600)); 
+                    stack.forEach(c => this.sendToDiscard(c, c.owner));
+                    this.state.fields[targetFieldIdx] = [];
+                } else { this.log("目标区域为空"); }
             } else if (type === 'bounce') {
                 if (stack.length > 0) {
-                    this.log(`${sourcePlayer===0?'我方':'敌方'} [回弹] 将顶牌退回牌库`);
-                    const top = stack.pop();
-                    this.state.decks[top.owner].push(top);
-                    this.state.decks[top.owner].sort(() => Math.random() - 0.5);
-                } else {
-                    this.log("目标区域为空，效果失效");
-                }
+                    this.log(`${sourcePlayer===0?'我方':'敌方'} [击退] 将顶牌退回牌库`);
+                    const top = stack[stack.length-1]; 
+                    const topCardEl = document.getElementById(`small-card-${top.id}`);
+                    if (topCardEl) { topCardEl.classList.add('animate-bounce-up'); await new Promise(r => setTimeout(r, 500)); }
+                    const popped = stack.pop();
+                    this.state.decks[popped.owner].push(popped);
+                    this.state.decks[popped.owner].sort(() => Math.random() - 0.5);
+                } else { this.log("目标区域为空"); }
             }
         }
-        
         this.renderGame();
-        await new Promise(r => setTimeout(r, 500));
-        this.processNextEffect();
+        await new Promise(r => setTimeout(r, 300));
+        await this.processNextEffect();
     },
 
-    // --- AI ---
-
+    // --- AI & END TURN ---
     aiTurn: async function() {
         const hand = this.state.hands[1];
-        if (hand.length === 0) {
-            await this.checkTurnEnd();
-            return;
+        if (hand.length === 0) { 
+             // IMPORTANT: Even if hand is empty, we must call checkTurnEnd to possibly pass turn back or end round
+             await this.checkTurnEnd(); 
+             return; 
         }
-
+        
         let bestMove = null;
         let bestScore = -9999;
+        await new Promise(r => setTimeout(r, 800));
 
+        // AI Thinking
         for (let i = 0; i < hand.length; i++) {
             const card = hand[i];
             for (let f = 0; f < 3; f++) {
@@ -451,494 +501,375 @@ window.App.pages.cardGame = {
                     if (this.hasSkill(card, 'double')) score += 5;
                     if (this.hasSkill(card, 'reverse')) score += 4; 
                     if (this.hasSkill(card, 'boom')) score -= 10; 
+                    if (this.hasSkill(card, 'control')) score += 6; 
                     
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMove = { type: 'play', cardIdx: i, fieldIdx: f };
+                    if (score > bestScore) { 
+                        bestScore = score; 
+                        bestMove = { type: 'play', cardIdx: i, fieldIdx: f }; 
                     }
                 }
             }
         }
 
-        await new Promise(r => setTimeout(r, 600));
-
         if (bestMove) {
-            if (bestMove.type === 'play') {
+            const card = hand[bestMove.cardIdx];
+            if (!this.canPlay(card, bestMove.fieldIdx)) {
+                console.warn("AI attempted illegal move, fallback to discard.");
+                bestMove = null; 
+            } else {
+                if (this.hasSkill(card, 'train')) this.applyTraining(1, bestMove.cardIdx, Math.random()>0.5?1:-1);
                 await this.playCard(1, bestMove.cardIdx, bestMove.fieldIdx);
+                return;
             }
-        } else {
+        }
+        
+        if (!bestMove) {
             let discardIdx = 0;
             const boomIdx = hand.findIndex(c => this.hasSkill(c, 'boom') || this.hasSkill(c, 'bounce'));
             if (boomIdx >= 0) discardIdx = boomIdx;
-            
             const card = hand[discardIdx];
+            if (this.hasSkill(card, 'train')) this.applyTraining(1, discardIdx, Math.random()>0.5?1:-1);
+            
+            await this.animateElementExit(`ai-card-${card.id}`, true);
             hand.splice(discardIdx, 1);
             this.log("AI 弃掉了一张牌");
+            this.sendToDiscard(card, 1);
             
             if (this.hasSkill(card, 'boom') || this.hasSkill(card, 'bounce')) {
                 let targetF = 0;
                 let maxDiff = -99;
                 for(let f=0; f<3; f++) {
                     const s = this.calculateStackScore(f);
-                    if (s.player - s.ai > maxDiff) {
-                        maxDiff = s.player - s.ai;
-                        targetF = f;
-                    }
+                    if (s.player - s.ai > maxDiff) { maxDiff = s.player - s.ai; targetF = f; }
                 }
-                
-                this.state.awaitingTarget = {
-                     type: this.hasSkill(card, 'boom') ? 'boom' : 'bounce',
-                     sourcePlayer: 1,
-                     cardData: card
-                };
+                this.state.awaitingTarget = { type: this.hasSkill(card, 'boom') ? 'boom' : 'bounce', sourcePlayer: 1, cardData: card };
                 await this.resolveDiscardEffect(targetF);
-            } else {
-                await this.checkTurnEnd();
-            }
+            } else { await this.checkTurnEnd(); }
         }
     },
 
     checkTurnEnd: async function() {
-        if (this.state.hands[0].length === 0 && this.state.hands[1].length === 0) {
-            await this.resolveRound();
-        } else {
-            this.state.turn = 1 - this.state.turn;
+        // 1. Check if BOTH have empty hands -> End Round
+        if (this.state.hands[0].length === 0 && this.state.hands[1].length === 0) { 
+            await this.resolveRound(); 
+            return; 
+        }
+        
+        const nextTurn = 1 - this.state.turn;
+        
+        // 2. If next player has cards, pass turn normally
+        if (this.state.hands[nextTurn].length > 0) {
+            this.state.turn = nextTurn;
             this.state.isProcessing = false;
             this.renderGame();
-            if (this.state.turn === 1) this.aiTurn();
+            
+            if (this.state.turn === 1) {
+                this.aiTurn();
+            }
+        } 
+        // 3. If next player has NO cards, but current player DOES have cards
+        else {
+             // Turn stays with current player
+             this.log(`${nextTurn===0?'我方':'敌方'} 无手牌，跳过回合`, "text-zinc-400 italic");
+             
+             this.state.isProcessing = false; // Important: Unlock for Player if they are the one playing
+             this.renderGame();
+             
+             // If it was AI's turn (1) and Player (0) is empty, AI plays again
+             if (this.state.turn === 1) {
+                 setTimeout(() => this.aiTurn(), 600);
+             }
+             // If it was Player's turn (0) and AI (1) is empty, Player can play again (input unlocked by isProcessing=false)
         }
     },
 
     calculateStackScore: function(fieldIdx) {
         const stack = this.state.fields[fieldIdx];
         if (!stack || stack.length === 0) return { player: 0, ai: 0 };
-
         const top = stack[stack.length - 1];
-        let pScore = 0;
-        let aScore = 0;
-
+        let pScore = 0; let aScore = 0;
         stack.forEach(c => {
             let val = 1;
             if (this.hasSkill(c, 'add1')) val += 1;
             if (this.hasSkill(c, 'add2')) val += 2;
             if (this.hasSkill(c, 'add3')) val += 3;
-            
-            if (c.owner === 0) pScore += val;
-            else aScore += val;
+            if (c.owner === 0) pScore += val; else aScore += val;
         });
-
-        if (this.hasSkill(top, 'double')) {
-            if (top.owner === 0) pScore *= 2;
-            else aScore *= 2;
-        }
-
+        if (this.hasSkill(top, 'double')) { if (top.owner === 0) pScore *= 2; else aScore *= 2; }
         return { player: pScore, ai: aScore };
     },
 
+    // --- ROUND RESOLUTION ---
     resolveRound: async function() {
         this.state.isProcessing = true;
-        this.log("回合结束，结算...", "text-amber-500");
-        await new Promise(r => setTimeout(r, 1000));
-
-        let totalP = 0;
-        let totalA = 0;
-
-        for (let f = 0; f < 3; f++) {
-            const scores = this.calculateStackScore(f);
-            totalP += scores.player;
-            totalA += scores.ai;
-        }
-
-        this.log(`最终比分: ${totalP} - ${totalA}`);
-
-        if (totalP > totalA) {
-            this.state.ippon[0]++;
-            this.log("我方获得 1 胜场 (IPPON)!", "text-green-500");
-        } else if (totalA > totalP) {
-            this.state.ippon[1]++;
-            this.log("敌方获得 1 胜场 (IPPON)!", "text-red-400");
-        } else {
-            this.log("平局！");
-        }
-
-        await new Promise(r => setTimeout(r, 2000));
-
-        if (this.state.ippon[0] >= this.CONST.WIN_IPPON) {
-            this.state.winner = 0;
-            this.state.started = false;
-        } else if (this.state.ippon[1] >= this.CONST.WIN_IPPON) {
-            this.state.winner = 1;
-            this.state.started = false;
-        } else {
-            this.startRound();
-        }
+        this.state.mode = 'scoring';
+        this.state.scoringState = {
+            totalP: 0,
+            totalA: 0,
+            activeField: -1,
+            finished: false
+        };
+        this.log("回合结束，开始结算...", "text-amber-500");
         this.renderGame();
-    },
-
-    log: function(msg, colorClass = "text-zinc-400") {
-        this.state.log.unshift({ text: msg, color: colorClass });
-        if (this.state.log.length > 30) this.state.log.pop();
-        const logEl = document.getElementById('game-log-content');
-        if (logEl) {
-            logEl.innerHTML = this.state.log.map(l => `<div class="text-xs ${l.color} mb-1 border-b border-white/5 pb-1">${l.text}</div>`).join('');
-        }
-    },
-
-    // --- RENDER ---
-
-    renderGame: function() {
-        const board = document.getElementById('game-board');
-        if (board) {
-            board.innerHTML = this.renderBoard();
-            if(window.lucide) window.lucide.createIcons();
-        }
-    },
-
-    render: function() {
-        return `
-        <div class="flex flex-col h-[calc(100vh-140px)] w-full fade-in relative max-w-7xl mx-auto">
-             <div id="game-board" class="flex-1 flex flex-col gap-4 relative">
-                ${this.renderBoard()}
-             </div>
-        </div>
-        `;
-    },
-
-    renderBoard: function() {
-        if (!this.state.started) {
-            const winnerHtml = this.state.winner !== null ? `
-                <div class="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm rounded-2xl border border-zinc-700">
-                    <div class="text-center animate-bounce">
-                        <h1 class="text-6xl font-black ${this.state.winner === 0 ? 'text-green-500' : 'text-red-500'} mb-4 drop-shadow-[0_0_15px_currentColor]">
-                            ${this.state.winner === 0 ? '胜 利' : '失 败'}
-                        </h1>
-                        <button onclick="window.App.pages.cardGame.initGame()" class="atom-btn px-8 py-3 bg-white text-zinc-800">再来一局</button>
-                    </div>
-                </div>` : '';
-
-            return `
-            ${winnerHtml}
-            <div class="flex flex-col items-center justify-center h-full gap-6">
-                <div class="w-20 h-20 bg-red-500 rounded-full flex items-center justify-center text-white shadow-[0_0_20px_rgba(239,68,68,0.5)] animate-pulse">
-                    <i data-lucide="dog" class="w-10 h-10"></i>
-                </div>
-                <h1 class="text-3xl font-black text-zinc-700 tracking-wider">阿不然打牌啰</h1>
-                <div class="text-sm text-zinc-500 max-w-md text-center leading-relaxed bg-zinc-100 p-6 rounded-xl border border-zinc-200">
-                    <div class="font-bold mb-2 text-zinc-700">游戏规则</div>
-                    <ul class="text-left list-disc pl-5 space-y-1 text-xs">
-                        <li>将牌打出到对应颜色的区域，且点数不能比顶端牌小。</li>
-                        <li>双方手牌打完后，结算分数，1张牌1分，分高者胜。</li>
-                        <li>三局两胜制，拿下两轮胜利即赢得游戏。</li>
-                    </ul>
-                </div>
-                <button onclick="window.App.pages.cardGame.initGame()" class="atom-btn px-10 py-4 text-red-600 bg-red-50 border-red-200 border-b-red-300">
-                    开始对战
-                </button>
-            </div>`;
-        }
-
-        const scores = [0,1,2].map(i => this.calculateStackScore(i));
-        const totalP = scores.reduce((a,b)=>a+b.player, 0);
-        const totalA = scores.reduce((a,b)=>a+b.ai, 0);
         
-        const selCount = this.state.selectedCardIndices.length;
-        const targetMode = this.state.awaitingTarget !== null;
-
-        let actionBtnText = "弃 牌";
-        let actionBtnColor = "bg-zinc-200 text-zinc-500 cursor-not-allowed"; 
-        let actionIcon = "trash-2";
-        let actionClick = "";
-
-        if (selCount > 0) {
-             actionBtnColor = "bg-orange-100 text-orange-600 border-orange-200 hover:bg-orange-200 cursor-pointer shadow-sm active:scale-95";
-             actionClick = "window.App.pages.cardGame.handleDiscardAction()";
-             
-             if (selCount >= 2) {
-                 if (this.state.redrawTokens > 0) {
-                     actionBtnText = `重组 (${this.state.redrawTokens})`;
-                     actionBtnColor = "bg-sky-100 text-sky-600 border-sky-200 hover:bg-sky-200 cursor-pointer shadow-sm active:scale-95";
-                     actionIcon = "refresh-cw";
-                 } else {
-                     actionBtnText = "批量弃牌";
-                 }
-             }
-        }
-
-        const queueStatus = this.state.effectQueue.length > 0 
-            ? `<div class="absolute top-2 left-1/2 -translate-x-1/2 bg-amber-500 text-white text-xs px-3 py-1 rounded-full shadow z-30 animate-pulse font-bold">
-                 正在结算特效: ${this.state.effectQueue.length} 个待处理
-               </div>` 
-            : '';
-        
-        const globalReverse = this.isGlobalReverse();
-        const reverseOverlay = globalReverse 
-            ? `<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0 opacity-10">
-                 <span class="text-[8rem] font-black text-black rotate-12 block">REVERSE</span>
-               </div>`
-            : '';
-
-        return `
-            <div class="flex flex-col md:flex-row h-full gap-4">
-                <div class="hidden md:flex w-64 flex-col gap-2 shrink-0">
-                     <div class="bg-zinc-800 text-white p-4 rounded-xl shadow-lg border border-zinc-700 relative overflow-hidden">
-                        <div class="absolute top-2 right-2">
-                            <button onclick="window.App.pages.cardGame.initGame()" class="p-1 hover:bg-white/10 rounded text-zinc-400 hover:text-white" title="重新开始">
-                                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                            </button>
-                        </div>
-                        <div class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">总分 (Total)</div>
-                        <div class="flex justify-between items-end">
-                            <div class="flex flex-col">
-                                <span class="text-xs text-green-400 font-bold">我方</span>
-                                <span class="text-4xl font-black">${totalP}</span>
-                            </div>
-                            <div class="h-8 w-[1px] bg-zinc-600"></div>
-                            <div class="flex flex-col items-end">
-                                <span class="text-xs text-red-400 font-bold">对手</span>
-                                <span class="text-4xl font-black">${totalA}</span>
-                            </div>
-                        </div>
-                     </div>
-                     <div class="flex-1 bg-zinc-900 rounded-xl border border-zinc-800 p-3 overflow-hidden flex flex-col shadow-inner min-h-0">
-                        <div id="game-log-content" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2 font-mono">
-                             ${this.state.log.map(l => `<div class="text-xs ${l.color} mb-1 border-b border-white/5 pb-1">${l.text}</div>`).join('')}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex-1 flex flex-col gap-2 min-w-0 relative">
-                    ${queueStatus}
-                    <div class="flex md:hidden justify-between items-center bg-zinc-800 text-white p-2 rounded-lg text-xs font-bold">
-                        <span>AI: ${totalA}</span>
-                        <span>VS</span>
-                        <span>ME: ${totalP}</span>
-                        <button onclick="window.App.pages.cardGame.initGame()" class="ml-2 p-1 hover:bg-white/10 rounded">
-                             <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
-                        </button>
-                    </div>
-
-                    <div class="flex justify-center -space-x-2 py-2 shrink-0 h-16 opacity-90 transition-all z-0">
-                        ${this.state.hands[1].map(() => `
-                            <div class="w-12 h-16 bg-zinc-700 border border-zinc-500 rounded shadow-sm relative">
-                                <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjNDA0MDQwIiAvPgo8cmVjdCB3aWR0aD0iMSIgaGVpZ2h0PSIxIiBmaWxsPSIjNTA1MDUwIiAvPgo8L3N2Zz4=')] opacity-50"></div>
-                            </div>
-                        `).join('')}
-                    </div>
-
-                    <div class="flex-1 grid grid-cols-3 gap-2 md:gap-6 p-2 md:p-6 bg-zinc-100/50 rounded-3xl border border-zinc-200 shadow-inner overflow-hidden relative z-0">
-                        ${reverseOverlay}
-                        ${[0, 1, 2].map(idx => this.renderFieldStack(idx, scores[idx])).join('')}
-                    </div>
-
-                    <div class="h-40 md:h-48 relative flex items-end justify-center pb-4 md:pb-6 gap-2 md:gap-4 px-4 z-20 pointer-events-none">
-                        <div class="flex items-end gap-2 md:gap-4 overflow-visible pointer-events-auto">
-                            ${this.state.hands[0].map((card, i) => this.renderPlayerCard(card, i)).join('')}
-                        </div>
-                        <div class="absolute right-0 bottom-6 pointer-events-auto">
-                            <button onclick="${actionClick}" 
-                                    class="w-24 h-24 rounded-full border-4 font-bold transition-all flex flex-col items-center justify-center gap-1 shadow-lg ${actionBtnColor}">
-                                <i data-lucide="${actionIcon}" class="w-6 h-6"></i>
-                                <span class="text-xs">${actionBtnText}</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                ${targetMode ? `<div class="absolute inset-0 bg-black/40 z-50 flex items-center justify-center pointer-events-none"><div class="bg-black text-white px-6 py-3 rounded-full animate-bounce font-bold pointer-events-auto">点击上方堆叠选择目标</div></div>` : ''}
-                ${this.state.browsingStackIdx !== -1 ? this.renderStackBrowser() : ''}
-            </div>`;
-    },
-
-    renderFieldStack: function(idx, score) {
-        const stack = this.state.fields[idx];
-        const stackColor = this.getStackColor(idx);
-        const colorName = this.CONST.COLOR_NAMES[stackColor];
-        const baseBg = stackColor === 0 ? 'bg-red-50' : stackColor === 1 ? 'bg-amber-50' : 'bg-sky-50';
-        const borderColor = this.CONST.COLOR_BORDERS[stackColor];
-        const textColor = this.CONST.COLOR_TEXT[stackColor];
-        
-        const stackVisuals = stack.slice(-6).map((c, i) => {
-            const offset = i * 20; 
-            const z = i;
-            const isTop = i === (Math.min(stack.length, 6) - 1);
-            return this.renderSmallCard(c, offset, z, isTop);
-        }).join('');
-
-        const selIndices = this.state.selectedCardIndices;
-        let overlayContent = '';
-        let onClickFn = `window.App.pages.cardGame.handleStackClick(${idx})`;
-        let cursorClass = 'cursor-pointer hover:bg-black/5';
-
-        // Check if Top Card is Lock and Enemy's
-        const topCard = stack.length > 0 ? stack[stack.length - 1] : null;
-        const isLocked = topCard && this.hasSkill(topCard, 'lock');
-        const lockIcon = isLocked ? `<div class="absolute -top-3 -right-3 z-30 bg-zinc-800 text-white w-8 h-8 flex items-center justify-center rounded-full border-2 border-white shadow-lg animate-pulse" title="锁定: 只能出同色牌"><i data-lucide="lock" class="w-4 h-4"></i></div>` : '';
-
-
-        if (selIndices.length === 1 && this.state.turn === 0 && !this.state.awaitingTarget) {
-            if (this.canPlay(this.state.hands[0][selIndices[0]], idx)) {
-                 overlayContent = `<div class="bg-green-500/80 text-white text-sm px-3 py-1 rounded-full font-bold shadow animate-bounce">放置</div>`;
-                 cursorClass = 'cursor-pointer bg-green-500/10 hover:bg-green-500/20';
+        for(let i=0; i<3; i++) {
+            this.state.scoringState.activeField = i;
+            this.renderGame();
+            
+            const stack = this.state.fields[i];
+            
+            if (stack.length > 0) {
+               await new Promise(r => setTimeout(r, 200));
+            } else {
+               await new Promise(r => setTimeout(r, 100));
             }
+            
+            for(const c of stack) {
+                const elId = `small-card-${c.id}`;
+                const el = document.getElementById(elId);
+                
+                if(el) {
+                    el.scrollIntoView({behavior: "smooth", block: "center"});
+                    el.classList.add('ring-4', 'ring-white', 'z-50', 'scale-110');
+                }
+                
+                await new Promise(r => setTimeout(r, 150)); 
+                
+                let val = 1;
+                if (this.hasSkill(c, 'add1')) val += 1;
+                if (this.hasSkill(c, 'add2')) val += 2;
+                if (this.hasSkill(c, 'add3')) val += 3;
+                
+                if (this.showFloatingScore && el) {
+                    const color = c.owner === 0 ? '#22c55e' : '#f43f5e';
+                    this.showFloatingScore(el, `+${val}`, color);
+                }
+
+                if (c.owner === 0) this.state.scoringState.totalP += val;
+                else this.state.scoringState.totalA += val;
+                
+                this.renderGame(); 
+                
+                if(el) el.classList.remove('ring-4', 'ring-white', 'z-50', 'scale-110');
+                
+                await new Promise(r => setTimeout(r, 100));
+            }
+            
+            const top = stack[stack.length-1];
+            if(top && this.hasSkill(top, 'double')) {
+                 this.log("字段效果 [鼓舞] 发动！分数翻倍！", "text-yellow-400 font-bold");
+                 let stackP = 0, stackA = 0;
+                 stack.forEach(c => {
+                    let v = 1;
+                    if (this.hasSkill(c, 'add1')) v += 1;
+                    if (this.hasSkill(c, 'add2')) v += 2;
+                    if (this.hasSkill(c, 'add3')) v += 3;
+                    if(c.owner === 0) stackP += v; else stackA += v;
+                 });
+                 
+                 const el = document.getElementById(`small-card-${top.id}`);
+                 if(el) {
+                     el.classList.add('animate-bounce');
+                     if(this.showFloatingScore) {
+                         const val = top.owner === 0 ? stackP : stackA;
+                         this.showFloatingScore(el, `x2 (+${val})`, '#facc15'); 
+                     }
+                 }
+                 
+                 await new Promise(r => setTimeout(r, 300));
+                 
+                 if(top.owner === 0) this.state.scoringState.totalP += stackP;
+                 else this.state.scoringState.totalA += stackA;
+                 this.renderGame();
+            }
+            await new Promise(r => setTimeout(r, 100));
         }
-        else if (this.state.awaitingTarget) {
-            overlayContent = `<div class="bg-red-500 text-white text-xs px-2 py-1 rounded shadow animate-pulse">选择目标</div>`;
-            cursorClass = 'cursor-pointer ring-4 ring-red-500/50 bg-red-500/10';
-        }
-
-        return `
-        <div onclick="${onClickFn}" class="relative h-full border-2 ${borderColor} ${baseBg} rounded-2xl flex flex-col justify-end pb-4 overflow-hidden group transition-colors ${cursorClass}">
-            ${lockIcon}
-            <div class="absolute top-0 left-0 right-0 p-2 flex justify-between items-start pointer-events-none z-10">
-                 <div class="bg-white/80 backdrop-blur px-2 py-1 rounded text-[10px] font-bold ${textColor} shadow-sm border border-black/5">${colorName}区</div>
-                 <div class="flex flex-col items-end">
-                    <span class="text-xs font-black ${score.ai > score.player ? 'text-red-500' : 'text-zinc-400'}">${score.ai}</span>
-                    <div class="w-full h-[1px] bg-zinc-300 my-0.5"></div>
-                    <span class="text-sm font-black ${score.player > score.ai ? 'text-green-500' : 'text-zinc-600'}">${score.player}</span>
-                 </div>
-            </div>
-            <div class="relative w-full h-full mt-10 mx-auto max-w-[80%] z-10">
-                ${stack.length === 0 ? '<div class="absolute inset-0 flex items-center justify-center text-zinc-300 text-sm font-bold tracking-widest pointer-events-none">空</div>' : ''}
-                ${stackVisuals}
-            </div>
-            <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-20">${overlayContent}</div>
-        </div>`;
-    },
-
-    renderSmallCard: function(card, bottomOffset, zIndex, isTop) {
-        const bg = this.CONST.COLORS[card.color];
-        const isMine = card.owner === 0;
-        const border = isMine ? 'border-zinc-600' : 'border-red-400 border-dashed';
         
-        // Enlarged Icons 3x
-        const skillIcons = card.skills.slice(0, 3).map(s => {
-             const sk = this.CONST.SKILLS[s];
-             const txt = sk.short || sk.name[0];
-             // w-3 h-3 (12px) -> w-9 h-9 (36px)
-             // text-[8px] -> text-lg
-             return `<div class="w-9 h-9 bg-black/20 rounded-full text-lg flex items-center justify-center text-white font-bold shadow-sm" title="${sk.name}">${txt}</div>`;
-        }).join('');
-
-        const skillDetails = isTop ? card.skills.map(s => {
-            const sk = this.CONST.SKILLS[s];
-            return `<div class="flex items-start gap-2 mb-1">
-                <span class="bg-white/20 px-1 rounded text-[10px] shrink-0 mt-0.5">${sk.name}</span>
-                <span class="text-[10px] opacity-80 leading-tight text-left">${sk.desc}</span>
-            </div>`;
-        }).join('') : '';
-
-        const tooltip = (isTop && card.skills.length > 0) ? `
-            <div class="absolute bottom-full mb-4 w-48 bg-zinc-900 text-white p-3 rounded-xl shadow-2xl border border-zinc-700 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 flex flex-col gap-2 scale-95 group-hover:scale-100 origin-bottom left-1/2 -translate-x-1/2">
-                <div class="text-xs font-bold text-zinc-400 border-b border-zinc-700 pb-1 flex justify-between">
-                    <span>顶牌效果</span>
-                    <span>点数 ${card.number}</span>
-                </div>
-                <div>${skillDetails}</div>
-                <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-zinc-900"></div>
-            </div>` : '';
-
-        return `
-        <div class="absolute left-0 right-0 h-32 rounded-lg border-2 ${border} ${bg} shadow-md flex flex-col items-center justify-center text-white transition-all transform ${isTop ? 'group-hover:scale-105 group-hover:-translate-y-2' : ''}" 
-             style="bottom: ${bottomOffset}px; z-index: ${zIndex}">
-             ${tooltip}
-             <div class="absolute top-2 right-2 flex flex-col gap-1">${skillIcons}</div>
-             <div class="text-3xl font-black drop-shadow-md absolute bottom-2 left-2">${this.getCardValue(card)}</div>
-        </div>`;
-    },
-
-    renderPlayerCard: function(card, idx, isStatic = false) {
-        const isSelected = !isStatic && this.state.selectedCardIndices.includes(idx);
-        const bg = this.CONST.COLORS[card.color];
-        
-        const skillDetails = card.skills.map(s => {
-            const sk = this.CONST.SKILLS[s];
-            return `<div class="flex items-start gap-2 mb-1">
-                <span class="bg-white/20 px-1 rounded text-[10px] shrink-0 mt-0.5">${sk.name}</span>
-                <span class="text-[10px] opacity-80 leading-tight text-left">${sk.desc}</span>
-            </div>`;
-        }).join('');
-
-        const onclick = isStatic ? '' : `onclick="window.App.pages.cardGame.selectCard(${idx})"`;
-        const cursor = isStatic ? '' : 'cursor-pointer';
-        const activeClass = isSelected ? 'border-yellow-300 -translate-y-10 shadow-2xl ring-4 ring-yellow-200/50 z-20' : 'border-white/20 hover:-translate-y-6 hover:shadow-xl z-10';
-        const cardClass = isStatic ? 'border-white/20 shadow-lg' : activeClass;
-        
-        // Animation check
-        const animClass = (!isStatic && Date.now() - (card.drawnAt || 0) < 500) ? 'animate-draw' : '';
-
-        return `
-        <div id="card-${card.id}" class="group relative flex flex-col items-center ${animClass}">
-            <div ${onclick} 
-                 class="w-24 h-36 shrink-0 rounded-xl ${bg} border-4 ${cardClass} 
-                 relative flex flex-col items-center justify-between p-2 text-white ${cursor} transition-all duration-200 select-none">
-                <div class="flex gap-1 w-full justify-end flex-wrap">
-                    ${card.skills.slice(0,3).map(s => {
-                        const sk = this.CONST.SKILLS[s];
-                        const txt = sk.short || sk.name[0];
-                        return `<div class="w-4 h-4 rounded-full bg-black/20 flex items-center justify-center text-[9px] font-bold">${txt}</div>`;
-                    }).join('')}
-                </div>
-                <div class="text-5xl font-black drop-shadow-lg">${this.getCardValue(card)}</div>
-                <div class="w-full h-1 bg-white/30 rounded-full"></div>
-                ${isSelected ? '<div class="absolute -top-3 -right-3 w-6 h-6 bg-yellow-400 text-white rounded-full flex items-center justify-center shadow-sm border-2 border-white"><i data-lucide="check" class="w-3 h-3"></i></div>' : ''}
-            </div>
-            <div class="absolute bottom-full mb-4 w-48 bg-zinc-900 text-white p-3 rounded-xl shadow-2xl border border-zinc-700 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-50 flex flex-col gap-2 scale-95 group-hover:scale-100 origin-bottom">
-                <div class="text-xs font-bold text-zinc-400 border-b border-zinc-700 pb-1 flex justify-between">
-                    <span>${this.CONST.COLOR_NAMES[card.color]}卡</span>
-                    <span>点数 ${card.number}</span>
-                </div>
-                <div>${skillDetails || '<span class="text-xs text-zinc-500 italic">无特殊效果</span>'}</div>
-                <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-zinc-900"></div>
-            </div>
-        </div>`;
-    },
-
-    renderStackBrowser: function() {
-        const idx = this.state.browsingStackIdx;
-        const stack = this.state.fields[idx];
-        // Reverse stack for display so top card is first/visible
-        const displayStack = [...stack].reverse();
-        
-        return `
-        <div class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 fade-in" onclick="window.App.pages.cardGame.closeStackBrowser()">
-            <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden border-2 border-zinc-200" onclick="event.stopPropagation()">
-                <div class="p-4 border-b border-zinc-200 flex justify-between items-center bg-zinc-50">
-                    <h3 class="font-black text-zinc-700 text-lg flex items-center gap-2">
-                        <div class="w-4 h-4 rounded-full ${this.CONST.COLORS[idx]}"></div>
-                        ${this.CONST.COLOR_NAMES[idx]}区卡牌一览 (${stack.length}) - 顶牌在左
-                    </h3>
-                    <button onclick="window.App.pages.cardGame.closeStackBrowser()" class="w-8 h-8 flex items-center justify-center hover:bg-zinc-200 rounded-full">
-                        <i data-lucide="x" class="w-5 h-5 text-zinc-500"></i>
-                    </button>
-                </div>
-                <div class="flex-1 overflow-y-auto p-6 bg-zinc-100/50">
-                    <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6 justify-items-center">
-                        ${stack.length === 0 ? '<div class="col-span-full text-center text-zinc-400 py-10">此处空空如也</div>' : ''}
-                        ${displayStack.map((c, i) => this.renderPlayerCard(c, i, true)).join('')}
-                    </div>
-                </div>
-            </div>
-        </div>
-        `;
-    },
-
-    selectCard: function(idx) {
-        if (this.state.isProcessing) return;
-        const pos = this.state.selectedCardIndices.indexOf(idx);
-        if (pos >= 0) {
-            this.state.selectedCardIndices.splice(pos, 1);
-        } else {
-            this.state.selectedCardIndices.push(idx);
-        }
+        this.state.scoringState.activeField = -1;
+        this.state.scoringState.finished = true;
         this.renderGame();
     },
     
-    closeStackBrowser: function() {
-        this.state.browsingStackIdx = -1;
+    confirmRoundEnd: function() {
+        const { totalP, totalA } = this.state.scoringState;
+        this.log(`最终比分: ${totalP} vs ${totalA}`);
+        
+        if (totalP > totalA) {
+            this.state.ippon[0]++;
+            this.log("我方胜场 +1", "text-sky-500 font-bold");
+        } else if (totalA > totalP) {
+            this.state.ippon[1]++;
+            this.log("敌方胜场 +1", "text-red-500 font-bold");
+        } else { this.log("平局"); }
+
+        if (this.state.ippon[0] >= this.CONST.WIN_IPPON) {
+            this.handleBattleWin();
+        } else if (this.state.ippon[1] >= this.CONST.WIN_IPPON) {
+            this.handleBattleLoss();
+        } else {
+             for(let p=0; p<2; p++) {
+                 this.state.hands[p].forEach(c => this.sendToDiscard(c, p));
+                 this.state.hands[p] = [];
+             }
+             for(let f=0; f<3; f++) {
+                 this.state.fields[f].forEach(c => this.sendToDiscard(c, c.owner));
+                 this.state.fields[f] = [];
+             }
+
+             this.drawCards(0, 5);
+             this.drawCards(1, 5);
+             
+             this.state.turn = 0; 
+             this.state.isProcessing = false;
+             this.state.mode = 'battle';
+             this.state.scoringState = null; 
+             this.log("下一轮开始！");
+             this.renderGame();
+        }
+    },
+
+    // --- GAME LOOP & REWARDS ---
+    handleBattleWin: function() {
+        this.log("战斗胜利！", "text-amber-500 font-black");
+        this.state.gold += (50 + this.state.level * 10);
+        this.state.rewardGroups = this.generateRewardGroups();
+        this.state.mode = 'reward';
         this.renderGame();
     },
 
-    mount: function() {
-        if(window.lucide) window.lucide.createIcons();
-    }
-};
+    handleBattleLoss: function() {
+        alert("战斗失败！别灰心，重新来过！");
+        this.initGame();
+    },
+
+    selectRewardGroup: function(groupIndex) {
+        if (groupIndex >= 0 && groupIndex < this.state.rewardGroups.length) {
+            const group = this.state.rewardGroups[groupIndex];
+            group.forEach(card => this.state.playerDeck.push(card));
+        }
+        this.proceedToNextStage();
+    },
+
+    skipReward: function() {
+        this.proceedToNextStage();
+    },
+
+    proceedToNextStage: function() {
+        this.state.level++;
+        if (this.state.level > this.state.maxLevel) {
+            alert("恭喜通关！");
+            this.initGame();
+            return;
+        }
+        
+        // 30% chance for event, 70% map (battle)
+        if (Math.random() < 0.3) {
+            this.state.mode = 'event';
+            const type = Math.random() < 0.6 ? 'shop' : 'blacksmith';
+            this.state.eventData = { type: type, removalMode: false, selectedIdx: null };
+        } else {
+            this.state.mode = 'map';
+        }
+        this.renderGame();
+    },
+
+    // --- SHOP & EVENTS ---
+    buyCardPack: function() {
+        if (this.state.gold >= 50) {
+            this.state.gold -= 50;
+            const newCards = this.generateRewardGroups()[0]; 
+            newCards.forEach(c => this.state.playerDeck.push(c));
+            alert(`购买成功！获得了 ${newCards.length} 张新卡牌！`);
+            this.renderGame();
+        } else { alert("金币不足！"); }
+    },
+    buyRemoval: function(idx) {
+        if (this.state.gold >= 100) {
+            this.state.gold -= 100;
+            this.state.playerDeck.splice(idx, 1);
+            this.state.eventData.removalMode = false; 
+            this.renderGame();
+        } else { alert("金币不足！"); }
+    },
+    toggleRemovalMode: function() {
+        this.state.eventData.removalMode = !this.state.eventData.removalMode;
+        this.renderGame();
+    },
+    resolveEvent: function() {
+         const { type, selectedIdx } = this.state.eventData;
+         if (type === 'blacksmith' && selectedIdx !== null) {
+            const card = this.state.playerDeck[selectedIdx];
+            card.number = Math.min(card.number + 1, 9); 
+            if (card.skills.length < 3) {
+                 const keys = Object.keys(this.CONST.SKILLS);
+                 const newSkill = keys[Math.floor(Math.random() * keys.length)];
+                 if (!card.skills.includes(newSkill)) card.skills.push(newSkill);
+            }
+        }
+        this.state.mode = 'map';
+        this.renderGame();
+    },
+
+    // --- INTERACTIONS ---
+    handleDiscardAction: function() {
+        if (this.state.turn !== 0 || this.state.isProcessing) return;
+        const indices = this.state.selectedCardIndices;
+        if (indices.length === 0) return;
+        const trainCards = indices.filter(idx => this.hasSkill(this.state.hands[0][idx], 'train'));
+        if (trainCards.length > 0) { this.state.trainingPending = { type: 'discard', indices: indices }; this.renderGame(); return; }
+        if (indices.length > 2) { this.state.discardConfirmOpen = true; this.renderGame(); return; }
+        this.executeDiscard();
+    },
+    confirmDiscard: function() { this.state.discardConfirmOpen = false; this.executeDiscard(); },
+    cancelDiscard: function() { this.state.discardConfirmOpen = false; this.renderGame(); },
+    handleTrainChoice: function(val) {
+        if (!this.state.trainingPending) return;
+        const { type, indices, targetField } = this.state.trainingPending;
+        indices.forEach(idx => this.applyTraining(0, idx, val));
+        this.state.trainingPending = null;
+        if (type === 'play') this.playCard(0, indices[0], targetField); else this.executeDiscard();
+    },
+    applyTraining: function(playerId, cardIdx, diff) {
+        const hand = this.state.hands[playerId];
+        const targets = [];
+        if (cardIdx > 0) targets.push(hand[cardIdx - 1]);
+        if (cardIdx < hand.length - 1) targets.push(hand[cardIdx + 1]);
+        targets.forEach(c => {
+            let newVal = c.number + diff;
+            if (newVal < 0) newVal = 0; if (newVal > 8) newVal = 8;
+            c.number = newVal;
+        });
+        this.log(`[特训] 生效: 相邻牌 ${diff>0?'+1':'-1'}`);
+    },
+    selectCard: function(idx) {
+        if (this.state.isProcessing) return;
+        const pos = this.state.selectedCardIndices.indexOf(idx);
+        if (pos >= 0) this.state.selectedCardIndices.splice(pos, 1); else this.state.selectedCardIndices.push(idx);
+        this.renderGame();
+    },
+    
+    // --- MODAL & PILE VIEWERS ---
+    viewPile: function(type, owner = 0) {
+        this.state.pileViewMode = { type: type, owner: owner };
+        this.renderGame();
+    },
+    
+    closeModal: function() {
+        this.state.pileViewMode = null;
+        this.state.discardConfirmOpen = false;
+        this.state.trainingPending = null;
+        this.renderGame();
+    },
+    
+    // --- UTILS ---
+    log: function(msg, colorClass = "text-zinc-400") {
+        this.state.log.push({ text: msg, color: colorClass });
+        if (this.state.log.length > 50) this.state.log.shift();
+        const logEl = document.getElementById('game-log-content');
+        if (logEl) {
+            logEl.innerHTML = this.state.log.map(l => `<div class="text-xs ${l.color} mb-1 border-b border-white/5 pb-1">${l.text}</div>`).join('');
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+    },
+    mount: function() { if(window.lucide) window.lucide.createIcons(); }
+});

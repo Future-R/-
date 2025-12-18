@@ -115,6 +115,7 @@ window.App.Router = {
 window.App.Layout = {
     render: function(currentPath) {
         const isHome = currentPath === '' || currentPath === '/';
+        const isCardGame = currentPath === 'card-game';
         const title = (window.App.config && window.App.config.name) ? window.App.config.name : "未来工具箱";
         // Check if CRT is DISABLED (if class no-crt is present)
         // If no-crt is present, isCrtOn is FALSE.
@@ -132,6 +133,21 @@ window.App.Layout = {
                 <span>返回</span>
             </button>
         ` : '';
+
+        // Conditionally render Footer
+        const footerContent = isCardGame ? '' : `
+        <footer class="w-full py-10 text-center mt-auto relative z-10">
+            <div class="inline-flex flex-col items-center gap-2">
+                <div class="inline-flex items-center gap-4 px-6 py-2 bg-white/80 backdrop-blur rounded-full border border-zinc-200">
+                    <a href="https://github.com/Future-R" target="_blank" rel="noopener noreferrer"
+                    class="flex items-center gap-2 text-zinc-400 hover:text-zinc-800 transition-colors">
+                        <i data-lucide="github" class="w-4 h-4"></i>
+                        <span class="text-xs font-bold tracking-widest">Github 主页</span>
+                    </a>
+                </div>
+                <span class="text-[10px] text-zinc-400 font-bold tracking-widest">未来科技 © 2025</span>
+            </div>
+        </footer>`;
 
         return `
         <header class="w-full pt-6 px-4 pb-2 relative z-20">
@@ -174,18 +190,7 @@ window.App.Layout = {
             <!-- Page Content -->
         </main>
 
-        <footer class="w-full py-10 text-center mt-auto relative z-10">
-            <div class="inline-flex flex-col items-center gap-2">
-                <div class="inline-flex items-center gap-4 px-6 py-2 bg-white/80 backdrop-blur rounded-full border border-zinc-200">
-                    <a href="https://github.com/Future-R" target="_blank" rel="noopener noreferrer"
-                    class="flex items-center gap-2 text-zinc-400 hover:text-zinc-800 transition-colors">
-                        <i data-lucide="github" class="w-4 h-4"></i>
-                        <span class="text-xs font-bold tracking-widest">Github 主页</span>
-                    </a>
-                </div>
-                <span class="text-[10px] text-zinc-400 font-bold tracking-widest">未来科技 © 2025</span>
-            </div>
-        </footer>
+        ${footerContent}
         `;
     },
     
